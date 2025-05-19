@@ -17,12 +17,33 @@ fn interface_builder() {
                 .public_key(PublicKey::from(&PrivateKey::random()))
                 .build(),
         )
+        .add_pre_up("echo PreUp".to_string())
+        .add_pre_down("echo PreDown".to_string())
+        .add_pre_down("echo \"There's can be multiple commands\"".to_string())
+        .add_post_up("echo PostUp".to_string())
+        .add_post_down("echo PostDown".to_string())
         .build();
 
     assert_eq!(interface.address, address);
     assert_eq!(interface.listen_port, Some(55870));
     assert_eq!(interface.dns.len(), 3);
     assert_eq!(interface.peers.len(), 1);
+
+    assert_eq!(interface.pre_up.len(), 1);
+    assert_eq!(interface.pre_up[0], "echo PreUp".to_string());
+    assert_eq!(interface.pre_down.len(), 2);
+    assert_eq!(interface.pre_down[0], "echo PreDown".to_string());
+    assert_eq!(
+        interface.pre_down[1],
+        "echo \"There's can be multiple commands\"".to_string()
+    );
+    assert_eq!(interface.post_up.len(), 1);
+    assert_eq!(interface.post_up[0], "echo PostUp".to_string());
+    assert_eq!(interface.post_down.len(), 1);
+    assert_eq!(interface.post_down[0], "echo PostDown".to_string());
+
+    println!("InterfaceBuilder complete config:");
+    println!("{interface}");
 }
 
 #[test]

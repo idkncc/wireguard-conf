@@ -52,6 +52,8 @@ impl Peer {
             .ok_or(WireguardError::NoAssignedIP)?;
 
         Ok(Interface {
+            endpoint: None,
+
             address: assigned_ip,
             listen_port: None,
             private_key,
@@ -60,7 +62,11 @@ impl Peer {
             #[cfg(feature = "amneziawg")]
             amnezia_settings: self.amnezia_settings.clone(),
 
-            endpoint: None,
+            pre_up: vec![],
+            pre_down: vec![],
+            post_up: vec![],
+            post_down: vec![],
+
             peers: vec![interface.to_peer()],
         })
     }

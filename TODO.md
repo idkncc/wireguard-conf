@@ -2,8 +2,8 @@
 
 - [ ] Add ipv6 support (+multi addresses on interfaces/peers) (feature flag?)
 - [ ] Support all Wireguard settings
-  - [ ] PresharedKey
+  - [x] PreUp/PreDown/PostUp/PostDown
   - [ ] Table
   - [ ] MTU
-  - [ ] PreUp/PreDown/PostUp/PostDown
+  - [ ] PresharedKey
   - [ ] PersistentKeepalive

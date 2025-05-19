@@ -50,6 +50,26 @@ pub struct Interface {
     #[cfg_attr(docsrs, doc(cfg(feature = "amneziawg")))]
     pub amnezia_settings: Option<AmneziaSettings>,
 
+    /// Commands, that will be executed before the interface is brought up
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs#preup)
+    pub pre_up: Vec<String>,
+
+    /// Commands, that will be executed before the interface is brought down
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs#predown)
+    pub pre_down: Vec<String>,
+
+    /// Commands, that will be executed after the interface is brought up
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs#postup)
+    pub post_up: Vec<String>,
+
+    /// Commands, that will be executed after the interface is brought down
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs#postdown)
+    pub post_down: Vec<String>,
+
     /// Peers.
     ///
     /// Create them using [`PeerBuilder`] or [`Interface::to_peer`] method.
@@ -107,6 +127,31 @@ impl fmt::Display for Interface {
         writeln!(f, "PrivateKey = {}", self.private_key)?;
         if !self.dns.is_empty() {
             writeln!(f, "DNS = {}", self.dns.join(","))?;
+        }
+
+        if !self.pre_up.is_empty() {
+            writeln!(f)?;
+            for snippet in &self.pre_up {
+                writeln!(f, "PreUp = {snippet}")?;
+            }
+        }
+        if !self.pre_down.is_empty() {
+            writeln!(f)?;
+            for snippet in &self.pre_down {
+                writeln!(f, "PreDown = {snippet}")?;
+            }
+        }
+        if !self.post_up.is_empty() {
+            writeln!(f)?;
+            for snippet in &self.post_up {
+                writeln!(f, "PostUp = {snippet}")?;
+            }
+        }
+        if !self.post_down.is_empty() {
+            writeln!(f)?;
+            for snippet in &self.post_down {
+                writeln!(f, "PostDown = {snippet}")?;
+            }
         }
 
         #[cfg(feature = "amneziawg")]

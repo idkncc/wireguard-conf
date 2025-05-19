@@ -40,6 +40,11 @@ pub struct InterfaceBuilder {
     #[cfg(feature = "amneziawg")]
     #[cfg_attr(docsrs, doc(cfg(feature = "amneziawg")))]
     amnezia_settings: Option<AmneziaSettings>,
+
+    pre_up: Vec<String>,
+    pre_down: Vec<String>,
+    post_up: Vec<String>,
+    post_down: Vec<String>,
 }
 
 impl InterfaceBuilder {
@@ -127,6 +132,72 @@ impl InterfaceBuilder {
         self
     }
 
+    // TODO: refactor with macros
+
+    /// Set commands, that will be executed before the interface is brought up.
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs#preup)
+    pub fn set_pre_up(mut self, snippets: Vec<String>) -> Self {
+        self.pre_up = snippets;
+        self
+    }
+
+    /// Add command, that will be executed before the interface is brought up.
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs#$docs)
+    pub fn add_pre_up(mut self, snippet: String) -> Self {
+        self.pre_up.push(snippet);
+        self
+    }
+
+    /// Set commands, that will be executed before the interface is brought down.
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs#predown)
+    pub fn set_pre_down(mut self, snippets: Vec<String>) -> Self {
+        self.pre_down = snippets;
+        self
+    }
+
+    /// Add command, that will be executed before the interface is brought down.
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs#predown)
+    pub fn add_pre_down(mut self, snippet: String) -> Self {
+        self.pre_down.push(snippet);
+        self
+    }
+
+    /// Set commands, that will be executed after the interface is brought up.
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs#postup)
+    pub fn set_post_up(mut self, snippets: Vec<String>) -> Self {
+        self.post_up = snippets;
+        self
+    }
+
+    /// Add command, that will be executed after the interface is brought up.
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs#postup)
+    pub fn add_post_up(mut self, snippet: String) -> Self {
+        self.post_up.push(snippet);
+        self
+    }
+
+    /// Set commands, that will be executed after the interface is brought down.
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs#postdown)
+    pub fn set_post_down(mut self, snippets: Vec<String>) -> Self {
+        self.post_down = snippets;
+        self
+    }
+
+    /// Add command, that will be executed after the interface is brought down.
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs#postdown)
+    pub fn add_post_down(mut self, snippet: String) -> Self {
+        self.post_down.push(snippet);
+        self
+    }
+
     /// Creates [`Interface`].
     pub fn build(self) -> Interface {
         Interface {
@@ -140,6 +211,11 @@ impl InterfaceBuilder {
 
             endpoint: self.endpoint,
             peers: self.peers,
+
+            pre_up: self.pre_up,
+            pre_down: self.pre_down,
+            post_up: self.post_up,
+            post_down: self.post_down,
         }
     }
 }
