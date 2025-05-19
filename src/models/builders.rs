@@ -91,11 +91,11 @@ impl InterfaceBuilder {
     ///
     /// # Note
     ///
-    /// - In interface's config this set `# Name = ...`
-    /// - If you export interface via [`Interface::as_peer()`], exported peer will have this
-    ///   `Peer.endpoint`
+    /// - `[Interface]` section will have `# Name = <endpoint>` comment at the top.
+    /// - Exported [`Peer`] (via [`Interface::to_peer`]) will have this endpoint.
     ///
-    /// [Wireguard Docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#listenport)
+    /// [Wireguard Docs for `# Name`](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#-name-1);
+    /// [Wireguard Docs for endpoint](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#endpoint)
     pub fn endpoint(mut self, endpoint: String) -> Self {
         self.endpoint = Some(endpoint);
         self
@@ -158,8 +158,8 @@ impl InterfaceBuilder {
 ///     .endpoint("public.client.example.com".to_string())
 ///     .add_allowed_ip("10.0.0.2/32".parse().unwrap())
 ///     .private_key(client_private_key.clone())
-///     // if you don't want to generate interface from peer, you can provide public key
-///     // instead of private_key:
+///     // you can provide public key, instead of private_key.
+///     // but you can't generate `Interface` out of `Peer`:
 ///     //  .public_key(client_public_key)
 ///     .build();
 ///
@@ -212,9 +212,9 @@ impl PeerBuilder {
     ///
     /// # Note
     ///
-    /// If you set private key (instead of public key), you can generate [`Interface`] from [`Peer`] (see [`Peer::as_interface()`]).
+    /// If you set private key (instead of public key), you can generate [`Interface`] from [`Peer`] (see [`Peer::to_interface()`]).
     ///
-    /// [Wireguard Docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#publickey)
+    /// [Wireguard Docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#privatekey)
     pub fn private_key(mut self, private_key: PrivateKey) -> PeerBuilder {
         self.key = Some(Either::Left(private_key));
         self

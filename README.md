@@ -43,3 +43,19 @@ println!("{}", peer.to_interface(&interface).unwrap());
 ### Features
 
 - `amneziawg`: adds support for generating/using [AmneziaWG](https://docs.amnezia.org/documentation/amnezia-wg/) obfuscation values.
+
+### How2Contribute
+
+1. Fork it, clone it
+2. Add changes
+3. Format and lint code:
+   ```shell
+   cargo fmt
+   cargo clippy
+   ```
+4. Commit changes (use [Conventional commits](https://www.conventionalcommits.org/en/v1.0.0/))
+   ```shell
+   git commit -m "feat: did something"
+   ```
+5. Create PR
+6. PROFIT

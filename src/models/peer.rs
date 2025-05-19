@@ -5,6 +5,9 @@ use std::fmt;
 
 use crate::prelude::*;
 
+/// Struct, that represents `[Peer]` section in configuration.
+///
+/// [Wireguard docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#peer)
 #[must_use]
 #[derive(Clone, Debug)]
 pub struct Peer {
@@ -67,8 +70,8 @@ impl Peer {
 ///
 /// # Note
 ///
-/// It exports only `[Peer] ...` part. To export full interface, use [`Interface::to_peer()`]
-/// and then [`Peer::to_string()`]
+/// It exports only `[Peer] ...` part. To export full interface, use [`Peer::to_interface()`]
+/// and then `.to_string()`
 impl fmt::Display for Peer {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "[Peer]")?;

@@ -7,14 +7,19 @@ use crate::WireguardError;
 
 /// Private key
 ///
-/// Wrapper around [`x25519_dalek::StaticSecret`]. It can be formatted to Wireguard's
-/// format, and also implements [`fmt::Debug`].
+/// Wrapper around [`x25519_dalek::StaticSecret`] with some traits.
+///
+/// # Implements
+///
+/// - Implements [`fmt::Display`] for exporting key in Wireguard's format.
+/// - Implements [`fmt::Debug`].
 #[derive(Clone)]
 pub struct PrivateKey {
     secret: StaticSecret,
 }
 
 impl PrivateKey {
+    /// Generate new random [`PrivateKey`]
     #[must_use]
     pub fn random() -> PrivateKey {
         Self {
@@ -61,8 +66,13 @@ impl TryFrom<String> for PrivateKey {
 
 /// Public key.
 ///
-/// Wrapper around [`x25519_dalek::PublicKey`]. It can be formatted to Wireguard's
-/// format, and also implements [`fmt::Debug`].
+/// Wrapper around [`x25519_dalek::PublicKey`] with some traits.
+///
+/// # Implements
+///
+/// - Implements [`fmt::Display`] for exporting key in Wireguard's format.
+/// - Implements [`fmt::Debug`].
+/// - Implements [`From<&PrivateKey>`] for converting [`PrivateKey`] to [`PublicKey`].
 #[derive(Clone, PartialEq)]
 pub struct PublicKey {
     key: XPublicKey,

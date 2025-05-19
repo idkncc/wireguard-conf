@@ -5,23 +5,83 @@ use std::fmt;
 
 use crate::prelude::*;
 
+/// Struct, that represents complete configuration (contains both `[Interface]` and `[Peer]`
+/// sections).
+///
+/// Use [`InterfaceBuilder`] to create interface.
+///
+/// [Wireguard docs](https://github.com/pirate/wireguard-docs#interface)
 #[must_use]
 #[derive(Clone, Debug)]
 pub struct Interface {
+    /// Interface's address.
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs#address)
     pub address: Ipv4Net,
+
+    /// Port to listen for incoming VPN connections.
+    ///
+    /// [Wireguard conf](https://github.com/pirate/wireguard-docs#listenport)
     pub listen_port: Option<u16>,
+
+    /// Node's private key.
+    ///
+    /// [Wireguard conf](https://github.com/pirate/wireguard-docs#privatekey)
     pub private_key: PrivateKey,
+
+    /// The DNS servers to announce to VPN clients via DHCP.
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs#dns-2)
     pub dns: Vec<String>,
+
+    /// Endpoint.
+    ///
+    /// - `[Interface]` section will have `# Name = <endpoint>` comment at the top.
+    /// - Exported [`Peer`] (via [`Interface::to_peer`]) will have this endpoint.
+    ///
+    /// [Wireguard Docs for `# Name`](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#-name-1);
+    /// [Wireguard Docs for endpoint](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#endpoint)
     pub endpoint: Option<String>,
 
+    /// AmneziaWG obfuscation values.
+    ///
+    /// [AmneziaWG Docs](https://github.com/amnezia-vpn/amneziawg-linux-kernel-module?tab=readme-ov-file#configuration)
     #[cfg(feature = "amneziawg")]
     #[cfg_attr(docsrs, doc(cfg(feature = "amneziawg")))]
     pub amnezia_settings: Option<AmneziaSettings>,
 
+    /// Peers.
+    ///
+    /// Create them using [`PeerBuilder`] or [`Interface::to_peer`] method.
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs#peer)
     pub peers: Vec<Peer>,
 }
 
 impl Interface {
+    /// Get [`Peer`] from interface.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use wireguard_conf::prelude::*;
+    /// // Create server node
+    /// let mut server = InterfaceBuilder::new()
+    ///     // <snip>
+    ///     .build();
+    ///
+    /// // Create client node, and add server to client's peers
+    /// let client = InterfaceBuilder::new()
+    ///     // <snip>
+    ///     .add_peer(server.to_peer()) // convert `Interface` to `Peer` using `.to_peer()` method.
+    ///     .build();
+    ///
+    /// // Add client to server's peers
+    /// server.peers.push(client.to_peer());
+    ///
+    /// println!("Server config:\n{server}");
+    /// println!("Client config:\n{client}");
+    /// ```
     pub fn to_peer(&self) -> Peer {
         Peer {
             endpoint: self.endpoint.clone(),
