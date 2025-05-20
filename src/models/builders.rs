@@ -35,11 +35,20 @@ pub struct InterfaceBuilder {
     private_key: Option<PrivateKey>,
     dns: Vec<String>,
     endpoint: Option<String>,
+
+    table: Option<Table>,
+    mtu: Option<usize>,
+
     peers: Vec<Peer>,
 
     #[cfg(feature = "amneziawg")]
     #[cfg_attr(docsrs, doc(cfg(feature = "amneziawg")))]
     amnezia_settings: Option<AmneziaSettings>,
+
+    pre_up: Vec<String>,
+    pre_down: Vec<String>,
+    post_up: Vec<String>,
+    post_down: Vec<String>,
 }
 
 impl InterfaceBuilder {
@@ -91,13 +100,29 @@ impl InterfaceBuilder {
     ///
     /// # Note
     ///
-    /// - In interface's config this set `# Name = ...`
-    /// - If you export interface via [`Interface::as_peer()`], exported peer will have this
-    ///   `Peer.endpoint`
+    /// - `[Interface]` section will have `# Name = <endpoint>` comment at the top.
+    /// - Exported [`Peer`] (via [`Interface::to_peer`]) will have this endpoint.
     ///
-    /// [Wireguard Docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#listenport)
+    /// [Wireguard Docs for `# Name`](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#-name-1);
+    /// [Wireguard Docs for endpoint](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#endpoint)
     pub fn endpoint(mut self, endpoint: String) -> Self {
         self.endpoint = Some(endpoint);
+        self
+    }
+
+    /// Set routing table. See [`Table`] for special values.
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#table)
+    pub fn set_table(mut self, value: Table) -> Self {
+        self.table = Some(value);
+        self
+    }
+
+    /// Set Maximum Transmission Unit (MTU, aka packet/frame size).
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#mtu)
+    pub fn set_mtu(mut self, value: usize) -> Self {
+        self.mtu = Some(value);
         self
     }
 
@@ -127,6 +152,72 @@ impl InterfaceBuilder {
         self
     }
 
+    // TODO: refactor with macros
+
+    /// Set commands, that will be executed before the interface is brought up.
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs#preup)
+    pub fn set_pre_up(mut self, snippets: Vec<String>) -> Self {
+        self.pre_up = snippets;
+        self
+    }
+
+    /// Add command, that will be executed before the interface is brought up.
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs#$docs)
+    pub fn add_pre_up(mut self, snippet: String) -> Self {
+        self.pre_up.push(snippet);
+        self
+    }
+
+    /// Set commands, that will be executed before the interface is brought down.
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs#predown)
+    pub fn set_pre_down(mut self, snippets: Vec<String>) -> Self {
+        self.pre_down = snippets;
+        self
+    }
+
+    /// Add command, that will be executed before the interface is brought down.
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs#predown)
+    pub fn add_pre_down(mut self, snippet: String) -> Self {
+        self.pre_down.push(snippet);
+        self
+    }
+
+    /// Set commands, that will be executed after the interface is brought up.
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs#postup)
+    pub fn set_post_up(mut self, snippets: Vec<String>) -> Self {
+        self.post_up = snippets;
+        self
+    }
+
+    /// Add command, that will be executed after the interface is brought up.
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs#postup)
+    pub fn add_post_up(mut self, snippet: String) -> Self {
+        self.post_up.push(snippet);
+        self
+    }
+
+    /// Set commands, that will be executed after the interface is brought down.
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs#postdown)
+    pub fn set_post_down(mut self, snippets: Vec<String>) -> Self {
+        self.post_down = snippets;
+        self
+    }
+
+    /// Add command, that will be executed after the interface is brought down.
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs#postdown)
+    pub fn add_post_down(mut self, snippet: String) -> Self {
+        self.post_down.push(snippet);
+        self
+    }
+
     /// Creates [`Interface`].
     pub fn build(self) -> Interface {
         Interface {
@@ -139,7 +230,16 @@ impl InterfaceBuilder {
             amnezia_settings: self.amnezia_settings,
 
             endpoint: self.endpoint,
+
+            table: self.table,
+            mtu: self.mtu,
+
             peers: self.peers,
+
+            pre_up: self.pre_up,
+            pre_down: self.pre_down,
+            post_up: self.post_up,
+            post_down: self.post_down,
         }
     }
 }
@@ -158,8 +258,8 @@ impl InterfaceBuilder {
 ///     .endpoint("public.client.example.com".to_string())
 ///     .add_allowed_ip("10.0.0.2/32".parse().unwrap())
 ///     .private_key(client_private_key.clone())
-///     // if you don't want to generate interface from peer, you can provide public key
-///     // instead of private_key:
+///     // you can provide public key, instead of private_key.
+///     // but you can't generate `Interface` out of `Peer`:
 ///     //  .public_key(client_public_key)
 ///     .build();
 ///
@@ -212,9 +312,9 @@ impl PeerBuilder {
     ///
     /// # Note
     ///
-    /// If you set private key (instead of public key), you can generate [`Interface`] from [`Peer`] (see [`Peer::as_interface()`]).
+    /// If you set private key (instead of public key), you can generate [`Interface`] from [`Peer`] (see [`Peer::to_interface()`]).
     ///
-    /// [Wireguard Docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#publickey)
+    /// [Wireguard Docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#privatekey)
     pub fn private_key(mut self, private_key: PrivateKey) -> PeerBuilder {
         self.key = Some(Either::Left(private_key));
         self

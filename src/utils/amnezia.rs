@@ -53,7 +53,7 @@ impl AmneziaSettings {
     /// let settings = AmneziaSettings::random();
     ///
     /// _ = InterfaceBuilder::new()
-    ///    // <...>
+    ///    // <snip>
     ///    .amnezia_settings(settings)
     ///    .build();
     /// ```
@@ -139,7 +139,7 @@ impl AmneziaSettings {
 ///
 /// # Note
 ///
-/// It exports only [`Jc = ..., Jmin = ..., etc`]. To export full interface, use [`Interface::to_string()`].
+/// It exports only [`Jc = ..., Jmin = ..., etc`]. To export full interface, use `Interface.to_string()`.
 impl fmt::Display for AmneziaSettings {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "Jc = {}", self.jc)?;

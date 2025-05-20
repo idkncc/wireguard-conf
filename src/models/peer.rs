@@ -5,6 +5,9 @@ use std::fmt;
 
 use crate::prelude::*;
 
+/// Struct, that represents `[Peer]` section in configuration.
+///
+/// [Wireguard docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#peer)
 #[must_use]
 #[derive(Clone, Debug)]
 pub struct Peer {
@@ -49,15 +52,24 @@ impl Peer {
             .ok_or(WireguardError::NoAssignedIP)?;
 
         Ok(Interface {
+            endpoint: None,
+
             address: assigned_ip,
             listen_port: None,
             private_key,
             dns: interface.dns.clone(),
 
+            table: None,
+            mtu: None,
+
             #[cfg(feature = "amneziawg")]
             amnezia_settings: self.amnezia_settings.clone(),
 
-            endpoint: None,
+            pre_up: vec![],
+            pre_down: vec![],
+            post_up: vec![],
+            post_down: vec![],
+
             peers: vec![interface.to_peer()],
         })
     }
@@ -67,8 +79,8 @@ impl Peer {
 ///
 /// # Note
 ///
-/// It exports only `[Peer] ...` part. To export full interface, use [`Interface::to_peer()`]
-/// and then [`Peer::to_string()`]
+/// It exports only `[Peer] ...` part. To export full interface, use [`Peer::to_interface()`]
+/// and then `.to_string()`
 impl fmt::Display for Peer {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(f, "[Peer]")?;
