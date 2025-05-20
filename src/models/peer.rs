@@ -59,6 +59,9 @@ impl Peer {
             private_key,
             dns: interface.dns.clone(),
 
+            table: None,
+            mtu: None,
+
             #[cfg(feature = "amneziawg")]
             amnezia_settings: self.amnezia_settings.clone(),
 

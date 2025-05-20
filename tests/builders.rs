@@ -10,6 +10,13 @@ fn interface_builder() {
         .listen_port(55870)
         .set_dns(vec!["8.8.8.8".to_string(), "8.8.4.4".to_string()])
         .add_dns("1.1.1.1".to_string())
+        .set_table(Table::RoutingTable(12345))
+        .set_mtu(1450)
+        .add_pre_up("echo PreUp".to_string())
+        .add_pre_down("echo PreDown".to_string())
+        .add_pre_down("echo \"There's can be multiple commands\"".to_string())
+        .add_post_up("echo PostUp".to_string())
+        .add_post_down("echo PostDown".to_string())
         .add_peer(
             PeerBuilder::new()
                 .set_allowed_ips(vec!["0.0.0.0/0".parse().unwrap()])
@@ -17,17 +24,13 @@ fn interface_builder() {
                 .public_key(PublicKey::from(&PrivateKey::random()))
                 .build(),
         )
-        .add_pre_up("echo PreUp".to_string())
-        .add_pre_down("echo PreDown".to_string())
-        .add_pre_down("echo \"There's can be multiple commands\"".to_string())
-        .add_post_up("echo PostUp".to_string())
-        .add_post_down("echo PostDown".to_string())
         .build();
 
     assert_eq!(interface.address, address);
     assert_eq!(interface.listen_port, Some(55870));
     assert_eq!(interface.dns.len(), 3);
-    assert_eq!(interface.peers.len(), 1);
+    assert_eq!(interface.table, Some(Table::RoutingTable(12345)));
+    assert_eq!(interface.mtu, Some(1450));
 
     assert_eq!(interface.pre_up.len(), 1);
     assert_eq!(interface.pre_up[0], "echo PreUp".to_string());
@@ -41,6 +44,8 @@ fn interface_builder() {
     assert_eq!(interface.post_up[0], "echo PostUp".to_string());
     assert_eq!(interface.post_down.len(), 1);
     assert_eq!(interface.post_down[0], "echo PostDown".to_string());
+
+    assert_eq!(interface.peers.len(), 1);
 
     println!("InterfaceBuilder complete config:");
     println!("{interface}");

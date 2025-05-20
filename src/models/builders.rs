@@ -35,6 +35,10 @@ pub struct InterfaceBuilder {
     private_key: Option<PrivateKey>,
     dns: Vec<String>,
     endpoint: Option<String>,
+
+    table: Option<Table>,
+    mtu: Option<usize>,
+
     peers: Vec<Peer>,
 
     #[cfg(feature = "amneziawg")]
@@ -103,6 +107,22 @@ impl InterfaceBuilder {
     /// [Wireguard Docs for endpoint](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#endpoint)
     pub fn endpoint(mut self, endpoint: String) -> Self {
         self.endpoint = Some(endpoint);
+        self
+    }
+
+    /// Set routing table. See [`Table`] for special values.
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#table)
+    pub fn set_table(mut self, value: Table) -> Self {
+        self.table = Some(value);
+        self
+    }
+
+    /// Set Maximum Transmission Unit (MTU, aka packet/frame size).
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#mtu)
+    pub fn set_mtu(mut self, value: usize) -> Self {
+        self.mtu = Some(value);
         self
     }
 
@@ -210,6 +230,10 @@ impl InterfaceBuilder {
             amnezia_settings: self.amnezia_settings,
 
             endpoint: self.endpoint,
+
+            table: self.table,
+            mtu: self.mtu,
+
             peers: self.peers,
 
             pre_up: self.pre_up,

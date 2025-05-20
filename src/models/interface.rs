@@ -5,6 +5,30 @@ use std::fmt;
 
 use crate::prelude::*;
 
+/// Controls the routing table to which routes are added.
+#[derive(PartialEq, Eq, Clone, Debug, Default)]
+pub enum Table {
+    /// Routing table
+    RoutingTable(usize),
+
+    /// Disables the creation of routes altogether
+    Off,
+
+    /// Adds routes to the default table and enables special handling of default routes.
+    #[default]
+    Auto,
+}
+
+impl fmt::Display for Table {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Table::RoutingTable(n) => write!(f, "{n}"),
+            Table::Off => write!(f, "off"),
+            Table::Auto => write!(f, "auto"),
+        }
+    }
+}
+
 /// Struct, that represents complete configuration (contains both `[Interface]` and `[Peer]`
 /// sections).
 ///
@@ -42,6 +66,18 @@ pub struct Interface {
     /// [Wireguard Docs for `# Name`](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#-name-1);
     /// [Wireguard Docs for endpoint](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#endpoint)
     pub endpoint: Option<String>,
+
+    /// Routing table to use for the WireGuard routes.
+    ///
+    /// See [`Table`] for special values.
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#table)
+    pub table: Option<Table>,
+
+    /// Maximum Transmission Unit (MTU, aka packet/frame size) to use when connecting to the peer.
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#mtu)
+    pub mtu: Option<usize>,
 
     /// AmneziaWG obfuscation values.
     ///
@@ -127,6 +163,12 @@ impl fmt::Display for Interface {
         writeln!(f, "PrivateKey = {}", self.private_key)?;
         if !self.dns.is_empty() {
             writeln!(f, "DNS = {}", self.dns.join(","))?;
+        }
+        if let Some(table) = &self.table {
+            writeln!(f, "Table = {table}")?;
+        }
+        if let Some(mtu) = &self.mtu {
+            writeln!(f, "MTU = {mtu}")?;
         }
 
         if !self.pre_up.is_empty() {
