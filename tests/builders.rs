@@ -1,4 +1,3 @@
-use ipnet::Ipv4Net;
 use wireguard_conf::{as_ipnet, prelude::*};
 
 #[test]

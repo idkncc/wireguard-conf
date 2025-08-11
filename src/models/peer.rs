@@ -23,6 +23,9 @@ pub struct Peer {
     /// Otherwise only to peer section of config.
     pub key: Either<PrivateKey, PublicKey>,
 
+    /// AmneziaWG settings.
+    ///
+    /// Used for packet obfuscation.
     #[cfg(feature = "amneziawg")]
     #[cfg_attr(docsrs, doc(cfg(feature = "amneziawg")))]
     pub amnezia_settings: Option<AmneziaSettings>,

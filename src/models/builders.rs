@@ -52,6 +52,7 @@ pub struct InterfaceBuilder {
 }
 
 impl InterfaceBuilder {
+    /// Create new [`InterfaceBuilder`].
     pub fn new() -> InterfaceBuilder {
         InterfaceBuilder::default()
     }
@@ -280,6 +281,7 @@ pub struct PeerBuilder {
 }
 
 impl PeerBuilder {
+    /// Create new [`PeerBuilder`].
     pub fn new() -> PeerBuilder {
         PeerBuilder::default()
     }

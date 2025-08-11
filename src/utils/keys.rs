@@ -70,7 +70,7 @@ impl fmt::Debug for PrivateKey {
     }
 }
 
-/// Exporting key as base64 for Wireguard.
+/// Export key as base64 for Wireguard.
 impl fmt::Display for PrivateKey {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", BASE64_STANDARD.encode(self.as_bytes()))

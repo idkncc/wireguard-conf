@@ -37,6 +37,7 @@
 
 #![warn(clippy::pedantic)]
 #![allow(clippy::doc_markdown)]
+#![warn(missing_docs)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 
 mod macros;

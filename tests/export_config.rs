@@ -1,4 +1,3 @@
-use ipnet::Ipv4Net;
 use wireguard_conf::{as_ipnet, prelude::*};
 
 fn get_example_data() -> (Interface, Peer) {
@@ -23,7 +22,7 @@ fn get_example_data() -> (Interface, Peer) {
 pub fn export_interface() {
     let (interface, _peer) = get_example_data();
 
-    println!("{}", interface);
+    println!("{interface}");
     // TODO: asserts
 }
 
@@ -39,7 +38,7 @@ pub fn export_client_interface() {
     let config = client_interface.to_string();
     let lines: Vec<&str> = config.split("\n").collect();
 
-    println!("{}", client_interface);
+    println!("{client_interface}");
 
     assert!(lines[0] == "[Interface]");
     assert!(lines[1].starts_with("Address = "));

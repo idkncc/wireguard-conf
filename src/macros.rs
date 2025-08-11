@@ -13,6 +13,6 @@
 #[macro_export]
 macro_rules! as_ipnet {
     ($x:expr) => {
-        $x.parse::<Ipv4Net>().unwrap()
+        $x.parse::<::ipnet::Ipv4Net>().unwrap()
     };
 }
