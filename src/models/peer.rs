@@ -12,9 +12,13 @@ use crate::prelude::*;
 #[derive(Clone, Debug)]
 pub struct Peer {
     /// Peer's endpoint.
+    ///
+    /// [Wireguard Docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#endpoint)
     pub endpoint: Option<String>,
 
     /// Peer's allowed IPs.
+    ///
+    /// [Wireguard Docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#allowedips)
     pub allowed_ips: Vec<Ipv4Net>,
 
     /// Peer's persistent keepalive.
