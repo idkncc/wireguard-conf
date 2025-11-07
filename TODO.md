@@ -8,4 +8,4 @@
   - [x] Table
   - [x] MTU
   - [ ] PresharedKey
-  - [ ] PersistentKeepalive
+  - [x] PersistentKeepalive

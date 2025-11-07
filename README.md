@@ -44,18 +44,19 @@ println!("{}", peer.to_interface(&interface).unwrap());
 
 - `amneziawg`: adds support for generating/using [AmneziaWG](https://docs.amnezia.org/documentation/amnezia-wg/) obfuscation values.
 
-### How2Contribute
+### Contributing
 
-1. Fork it, clone it
-2. Add changes
-3. Format and lint code:
-   ```shell
-   cargo fmt
-   cargo clippy
+1. Fork & clone
+2. Install Rust, Cargo, etc. On nix you can start devshell (`nix develop -c $SHELL`)
+3. Make changes
+4. Format and lint code:
    ```
-4. Commit changes (use [Conventional commits](https://www.conventionalcommits.org/en/v1.0.0/))
+   just fmt
+   just lint
+   # or fix automatically: just lint-fix
+   ```
+5. Commit changes (use [Conventional commits](https://www.conventionalcommits.org/en/v1.0.0/))
    ```shell
    git commit -m "feat: did something"
    ```
-5. Create PR
-6. PROFIT
+6. Send ~patches~ PR
