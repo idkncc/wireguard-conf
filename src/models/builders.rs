@@ -262,11 +262,13 @@ impl InterfaceBuilder {
 ///     // you can provide public key, instead of private_key.
 ///     // but you can't generate `Interface` out of `Peer`:
 ///     //  .public_key(client_public_key)
+///     .persistent_keepalive(25)
 ///     .build();
 ///
 /// assert_eq!(peer.endpoint, Some("public.client.example.com".to_string()));
 /// assert_eq!(peer.allowed_ips, vec!["10.0.0.2/32".parse().unwrap()]);
 /// assert_eq!(peer.key, Either::Left(client_private_key));
+/// assert_eq!(peer.persistent_keepalive, 25);
 /// ```
 #[must_use]
 #[derive(Default)]
@@ -274,6 +276,7 @@ pub struct PeerBuilder {
     endpoint: Option<String>,
     allowed_ips: Vec<Ipv4Net>,
     key: Option<Either<PrivateKey, PublicKey>>,
+    persistent_keepalive: u16,
 
     #[cfg(feature = "amneziawg")]
     #[cfg_attr(docsrs, doc(cfg(feature = "amneziawg")))]
@@ -330,6 +333,19 @@ impl PeerBuilder {
         self
     }
 
+    /// Sets persistent keepalive.
+    ///
+    /// Represents in seconds how often to send an authenticated empty packet to the peer, for the
+    /// purpose of keeping a stateful firewall or NAT mapping valid persistently.
+    ///
+    /// Setting this value to `0` omits it in config.
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#persistentkeepalive)
+    pub fn persistent_keepalive(mut self, persistent_keepalive: u16) -> PeerBuilder {
+        self.persistent_keepalive = persistent_keepalive;
+        self
+    }
+
     /// Sets AmneziaWG obfuscation values.
     ///
     /// [AmneziaWG Docs](https://github.com/amnezia-vpn/amneziawg-linux-kernel-module?tab=readme-ov-file#configuration)
@@ -350,6 +366,7 @@ impl PeerBuilder {
             endpoint: self.endpoint,
             allowed_ips: self.allowed_ips,
             key,
+            persistent_keepalive: self.persistent_keepalive,
 
             #[cfg(feature = "amneziawg")]
             amnezia_settings: self.amnezia_settings,

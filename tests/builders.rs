@@ -54,12 +54,18 @@ fn interface_builder() {
 fn peer_builder() {
     let allowed_ip = as_ipnet!("10.3.2.1/32");
     let endpoint = "peer.example.com".to_string();
+    let persistent_keepalive = 25;
 
     let peer = PeerBuilder::new()
         .set_allowed_ips(vec![allowed_ip])
         .endpoint(endpoint.clone())
+        .persistent_keepalive(persistent_keepalive)
         .build();
 
     assert_eq!(peer.allowed_ips, vec![allowed_ip]);
     assert_eq!(peer.endpoint, Some(endpoint));
+    assert_eq!(peer.persistent_keepalive, persistent_keepalive);
+    
+    println!("Peer config (partial):");
+    println!("{peer}");
 }

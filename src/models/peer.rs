@@ -17,6 +17,16 @@ pub struct Peer {
     /// Peer's allowed IPs.
     pub allowed_ips: Vec<Ipv4Net>,
 
+    /// Peer's persistent keepalive.
+    ///
+    /// Represents in seconds how often to send an authenticated empty packet to the peer, for the
+    /// purpose of keeping a stateful firewall or NAT mapping valid persistently.
+    ///
+    /// Setting this value to `0` omits it in config.
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#persistentkeepalive)
+    pub persistent_keepalive: u16,
+
     /// Peer's key.
     ///
     /// If [`PrivateKey`] is provided, then peer can be exported to interface & full config.
@@ -104,6 +114,9 @@ impl fmt::Display for Peer {
             "PublicKey = {}",
             self.key.clone().right_or_else(|key| PublicKey::from(&key))
         )?;
+        if self.persistent_keepalive != 0 {
+            writeln!(f, "PersistentKeepalive = {}", self.persistent_keepalive)?;
+        }
 
         Ok(())
     }
