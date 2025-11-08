@@ -15,15 +15,13 @@
 //! use wireguard_conf::prelude::*;
 //! use wireguard_conf::as_ipnet;
 //!
-//! use ipnet::Ipv4Net;
-//!
 //! let peer = PeerBuilder::new()
-//!     .add_allowed_ip(as_ipnet!("10.0.0.2/24"))
+//!     .allowed_ips([as_ipnet!("10.0.0.2/24")])
 //!     .build();
 //!
 //! let interface = InterfaceBuilder::new()
 //!     .address(as_ipnet!("10.0.0.1/24"))
-//!     .add_peer(peer.clone())
+//!     .peers([peer.clone()])
 //!     .build();
 //!
 //! // to export configs, use `println!()`, `writeln!()`, `.to_string()`, etc.

@@ -57,19 +57,30 @@ impl PeerBuilder {
     /// Create new `InterfaceBuilder`.
     ///
     /// ```rust
-    /// let interface = InterfaceBuilder::new()
+    /// # use wireguard_conf::prelude::*;
+    /// # use wireguard_conf::as_ipnet;
+    /// #
+    /// let interface = PeerBuilder::new()
+    ///     .allowed_ips([as_ipnet!("0.0.0.0/0")])
+    ///     // <snip>
     ///     .build();
     /// ```
+    #[must_use]
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Sets private key.
+    ///
+    /// Shorthand for `.key(Either::Left(value))`.
     pub fn private_key(&mut self, value: PrivateKey) -> &mut Self {
-        let mut new = self;
-        new.key = Some(Either::Left(value));
-        new
+        self.key = Some(Either::Left(value));
+        self
     }
 
+    /// Sets public key.
+    ///
+    /// Shorthand for `.key(Either::Right(value))`.
     pub fn public_key(&mut self, value: PublicKey) -> &mut Self {
         self.key = Some(Either::Right(value));
         self

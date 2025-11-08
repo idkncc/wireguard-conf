@@ -141,4 +141,15 @@ fn post_down() {
     assert_eq!(interface.post_down, post_down.to_vec());
 }
 
+#[test]
+fn peers() {
+    let peer1 = PeerBuilder::new().build();
+    let peer2 = PeerBuilder::new().build();
+    let peers = [peer1, peer2];
+
+    let interface = InterfaceBuilder::new().peers(&peers).build();
+
+    assert_eq!(interface.peers, peers.to_vec());
+}
+
 // TODO: amnezia feature

@@ -126,7 +126,7 @@ pub struct Interface {
     /// Create them using [`PeerBuilder`] or [`Interface::to_peer`] method.
     ///
     /// [Wireguard docs](https://github.com/pirate/wireguard-docs#peer)
-    #[builder(default)]
+    #[builder(setter(into), default)]
     pub peers: Vec<Peer>,
 }
 
@@ -145,7 +145,7 @@ impl Interface {
     /// // Create client node, and add server to client's peers
     /// let client = InterfaceBuilder::new()
     ///     // <snip>
-    ///     .add_peer(server.to_peer()) // convert `Interface` to `Peer` using `.to_peer()` method.
+    ///     .peers([server.to_peer()]) // convert `Interface` to `Peer` using `.to_peer()` method.
     ///     .build();
     ///
     /// // Add client to server's peers
@@ -171,7 +171,12 @@ impl InterfaceBuilder {
     /// Create new `InterfaceBuilder`.
     ///
     /// ```rust
+    /// # use wireguard_conf::prelude::*;
+    /// # use wireguard_conf::as_ipnet;
+    /// #
     /// let interface = InterfaceBuilder::new()
+    ///     .address(as_ipnet!("10.0.0.1/24"))
+    ///     // <snip>
     ///     .build();
     /// ```
     pub fn new() -> Self {
