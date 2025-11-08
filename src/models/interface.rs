@@ -1,6 +1,8 @@
+use derive_builder::Builder;
 use either::Either;
 use ipnet::Ipv4Net;
 
+use std::convert::Infallible;
 use std::fmt;
 
 use crate::prelude::*;
@@ -36,26 +38,31 @@ impl fmt::Display for Table {
 ///
 /// [Wireguard docs](https://github.com/pirate/wireguard-docs#interface)
 #[must_use]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Builder)]
+#[builder(build_fn(private, name = "fallible_build", error = "Infallible"))]
 pub struct Interface {
     /// Interface's address.
     ///
     /// [Wireguard docs](https://github.com/pirate/wireguard-docs#address)
+    #[builder(default)]
     pub address: Ipv4Net,
 
     /// Port to listen for incoming VPN connections.
     ///
     /// [Wireguard conf](https://github.com/pirate/wireguard-docs#listenport)
+    #[builder(setter(strip_option), default)]
     pub listen_port: Option<u16>,
 
     /// Node's private key.
     ///
     /// [Wireguard conf](https://github.com/pirate/wireguard-docs#privatekey)
+    #[builder(default = "PrivateKey::random()")]
     pub private_key: PrivateKey,
 
     /// The DNS servers to announce to VPN clients via DHCP.
     ///
     /// [Wireguard docs](https://github.com/pirate/wireguard-docs#dns-2)
+    #[builder(setter(into, strip_option), default)]
     pub dns: Vec<String>,
 
     /// Endpoint.
@@ -65,6 +72,7 @@ pub struct Interface {
     ///
     /// [Wireguard Docs for `# Name`](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#-name-1);
     /// [Wireguard Docs for endpoint](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#endpoint)
+    #[builder(setter(into, strip_option), default)]
     pub endpoint: Option<String>,
 
     /// Routing table to use for the WireGuard routes.
@@ -72,11 +80,13 @@ pub struct Interface {
     /// See [`Table`] for special values.
     ///
     /// [Wireguard docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#table)
+    #[builder(setter(strip_option), default)]
     pub table: Option<Table>,
 
     /// Maximum Transmission Unit (MTU, aka packet/frame size) to use when connecting to the peer.
     ///
     /// [Wireguard docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#mtu)
+    #[builder(setter(strip_option), default)]
     pub mtu: Option<usize>,
 
     /// AmneziaWG obfuscation values.
@@ -84,26 +94,31 @@ pub struct Interface {
     /// [AmneziaWG Docs](https://github.com/amnezia-vpn/amneziawg-linux-kernel-module?tab=readme-ov-file#configuration)
     #[cfg(feature = "amneziawg")]
     #[cfg_attr(docsrs, doc(cfg(feature = "amneziawg")))]
+    #[builder(setter(strip_option), default)]
     pub amnezia_settings: Option<AmneziaSettings>,
 
     /// Commands, that will be executed before the interface is brought up
     ///
     /// [Wireguard docs](https://github.com/pirate/wireguard-docs#preup)
+    #[builder(setter(into), default)]
     pub pre_up: Vec<String>,
 
     /// Commands, that will be executed before the interface is brought down
     ///
     /// [Wireguard docs](https://github.com/pirate/wireguard-docs#predown)
+    #[builder(setter(into), default)]
     pub pre_down: Vec<String>,
 
     /// Commands, that will be executed after the interface is brought up
     ///
     /// [Wireguard docs](https://github.com/pirate/wireguard-docs#postup)
+    #[builder(setter(into), default)]
     pub post_up: Vec<String>,
 
     /// Commands, that will be executed after the interface is brought down
     ///
     /// [Wireguard docs](https://github.com/pirate/wireguard-docs#postdown)
+    #[builder(setter(into), default)]
     pub post_down: Vec<String>,
 
     /// Peers.
@@ -111,6 +126,7 @@ pub struct Interface {
     /// Create them using [`PeerBuilder`] or [`Interface::to_peer`] method.
     ///
     /// [Wireguard docs](https://github.com/pirate/wireguard-docs#peer)
+    #[builder(default)]
     pub peers: Vec<Peer>,
 }
 
@@ -148,6 +164,23 @@ impl Interface {
             #[cfg(feature = "amneziawg")]
             amnezia_settings: self.amnezia_settings.clone(),
         }
+    }
+}
+
+impl InterfaceBuilder {
+    /// Create new `InterfaceBuilder`.
+    ///
+    /// ```rust
+    /// let interface = InterfaceBuilder::new()
+    ///     .build();
+    /// ```
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Builds an `Interface`.
+    pub fn build(&self) -> Interface {
+        self.fallible_build().unwrap_or_else(|_| unreachable!())
     }
 }
 

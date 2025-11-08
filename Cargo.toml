@@ -25,6 +25,7 @@ x25519-dalek = { version = "2.0.1", features = ["static_secrets", "getrandom"] }
 zeroize = { version = "1.8.1", features = ["zeroize_derive"] }
 
 rand = { version = "0.9.0", features = ["small_rng"], optional = true }
+derive_builder = "0.20.2"
 
 # Doc all features
 [package.metadata.docs.rs]

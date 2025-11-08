@@ -1,6 +1,8 @@
+use derive_builder::Builder;
 use either::Either;
 use ipnet::Ipv4Net;
 
+use std::convert::Infallible;
 use std::fmt;
 
 use crate::prelude::*;
@@ -9,16 +11,19 @@ use crate::prelude::*;
 ///
 /// [Wireguard docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#peer)
 #[must_use]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Builder)]
+#[builder(build_fn(private, name = "fallible_build", error = "Infallible"))]
 pub struct Peer {
     /// Peer's endpoint.
     ///
     /// [Wireguard Docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#endpoint)
+    #[builder(setter(into, strip_option), default)]
     pub endpoint: Option<String>,
 
     /// Peer's allowed IPs.
     ///
     /// [Wireguard Docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#allowedips)
+    #[builder(setter(into, strip_option), default)]
     pub allowed_ips: Vec<Ipv4Net>,
 
     /// Peer's persistent keepalive.
@@ -29,12 +34,14 @@ pub struct Peer {
     /// Setting this value to `0` omits it in config.
     ///
     /// [Wireguard docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#persistentkeepalive)
+    #[builder(default)]
     pub persistent_keepalive: u16,
 
     /// Peer's key.
     ///
     /// If [`PrivateKey`] is provided, then peer can be exported to interface & full config.
     /// Otherwise only to peer section of config.
+    #[builder(default = Either::Left(PrivateKey::random()))]
     pub key: Either<PrivateKey, PublicKey>,
 
     /// AmneziaWG settings.
@@ -42,7 +49,36 @@ pub struct Peer {
     /// Used for packet obfuscation.
     #[cfg(feature = "amneziawg")]
     #[cfg_attr(docsrs, doc(cfg(feature = "amneziawg")))]
+    #[builder(setter(strip_option), default)]
     pub amnezia_settings: Option<AmneziaSettings>,
+}
+
+impl PeerBuilder {
+    /// Create new `InterfaceBuilder`.
+    ///
+    /// ```rust
+    /// let interface = InterfaceBuilder::new()
+    ///     .build();
+    /// ```
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn private_key(&mut self, value: PrivateKey) -> &mut Self {
+        let mut new = self;
+        new.key = Some(Either::Left(value));
+        new
+    }
+
+    pub fn public_key(&mut self, value: PublicKey) -> &mut Self {
+        self.key = Some(Either::Right(value));
+        self
+    }
+
+    /// Builds an `Interface`.
+    pub fn build(&self) -> Peer {
+        self.fallible_build().unwrap_or_else(|_| unreachable!())
+    }
 }
 
 impl Peer {
