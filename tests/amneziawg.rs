@@ -1,5 +1,4 @@
 #![cfg(feature = "amneziawg")]
-use wireguard_conf::as_ipnet;
 use wireguard_conf::prelude::*;
 
 #[test]
