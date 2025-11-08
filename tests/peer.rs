@@ -15,7 +15,10 @@ fn empty_peer() {
             endpoint: None,
             allowed_ips: vec![],
             persistent_keepalive: 0,
-            key
+            key,
+
+            #[cfg(feature = "amneziawg")]
+            amnezia_settings: None
         }
     );
 }
@@ -57,4 +60,16 @@ fn key() {
 
     assert_eq!(peer_private_key.key, Either::Left(private_key));
     assert_eq!(peer_public_key.key, Either::Right(public_key));
+}
+
+#[cfg(feature = "amneziawg")]
+#[test]
+fn amnezia_settings() {
+    let amnezia_settings = AmneziaSettings::random();
+
+    let peer = PeerBuilder::new()
+        .amnezia_settings(amnezia_settings.clone())
+        .build();
+
+    assert_eq!(peer.amnezia_settings, Some(amnezia_settings));
 }

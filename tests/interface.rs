@@ -17,6 +17,10 @@ fn empty_interface() {
             endpoint: None,
             table: None,
             mtu: None,
+
+            #[cfg(feature = "amneziawg")]
+            amnezia_settings: None,
+
             pre_up: vec![],
             pre_down: vec![],
             post_up: vec![],
@@ -91,6 +95,18 @@ fn mtu() {
     let interface = InterfaceBuilder::new().mtu(1420).build();
 
     assert_eq!(interface.mtu, Some(mtu));
+}
+
+#[cfg(feature = "amneziawg")]
+#[test]
+fn amnezia_settings() {
+    let amnezia_settings = AmneziaSettings::random();
+
+    let interface = InterfaceBuilder::new()
+        .amnezia_settings(amnezia_settings.clone())
+        .build();
+
+    assert_eq!(interface.amnezia_settings, Some(amnezia_settings));
 }
 
 #[test]

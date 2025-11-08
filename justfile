@@ -5,6 +5,8 @@ default:
 
 test:
     cargo test {{CFLAGS}}
+test-all:
+    cargo test --all-features {{CFLAGS}}
 test-no-capture:
     cargo test {{CFLAGS}} -- --nocapture
 
@@ -20,6 +22,6 @@ docs-open:
 fmt:
     cargo fmt {{CFLAGS}}
 lint:
-    cargo clippy {{CFLAGS}}
+    cargo clippy --all-features {{CFLAGS}}
 lint-fix:
-    cargo clippy --fix --allow-dirty {{CFLAGS}}
+    cargo clippy --all-features --fix --allow-dirty {{CFLAGS}}
