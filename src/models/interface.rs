@@ -159,6 +159,7 @@ impl Interface {
             endpoint: self.endpoint.clone(),
             allowed_ips: vec![self.address],
             key: Either::Left(self.private_key.clone()),
+            preshared_key: None,
             persistent_keepalive: 0,
 
             #[cfg(feature = "amneziawg")]

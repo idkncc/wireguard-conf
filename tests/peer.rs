@@ -16,6 +16,7 @@ fn empty_peer() {
             allowed_ips: vec![],
             persistent_keepalive: 0,
             key,
+            preshared_key: None,
 
             #[cfg(feature = "amneziawg")]
             amnezia_settings: None
@@ -60,6 +61,17 @@ fn key() {
 
     assert_eq!(peer_private_key.key, Either::Left(private_key));
     assert_eq!(peer_public_key.key, Either::Right(public_key));
+}
+
+#[test]
+fn preshared_key() {
+    let preshared_key = PresharedKey::random();
+
+    let peer = PeerBuilder::new()
+        .preshared_key(preshared_key.clone())
+        .build();
+
+    assert_eq!(peer.preshared_key, Some(preshared_key));
 }
 
 #[cfg(feature = "amneziawg")]

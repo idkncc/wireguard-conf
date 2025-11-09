@@ -44,6 +44,10 @@ pub struct Peer {
     #[builder(default = Either::Left(PrivateKey::random()))]
     pub key: Either<PrivateKey, PublicKey>,
 
+    /// Peer's preshared-key.
+    #[builder(setter(strip_option), default)]
+    pub preshared_key: Option<PresharedKey>,
+
     /// AmneziaWG settings.
     ///
     /// Used for packet obfuscation.
@@ -165,6 +169,9 @@ impl fmt::Display for Peer {
             "PublicKey = {}",
             self.key.clone().right_or_else(|key| PublicKey::from(&key))
         )?;
+        if let Some(preshared_key) = &self.preshared_key {
+            writeln!(f, "PresharedKey = {preshared_key}")?;
+        }
         if self.persistent_keepalive != 0 {
             writeln!(f, "PersistentKeepalive = {}", self.persistent_keepalive)?;
         }
