@@ -276,9 +276,9 @@ impl TryFrom<&str> for PresharedKey {
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         let bytes: [u8; 32] = BASE64_STANDARD
             .decode(value)
-            .map_err(|_| WireguardError::InvalidPublicKey)?
+            .map_err(|_| WireguardError::InvalidPresharedKey)?
             .try_into()
-            .map_err(|_| WireguardError::InvalidPublicKey)?;
+            .map_err(|_| WireguardError::InvalidPresharedKey)?;
 
         Ok(Self(bytes))
     }
