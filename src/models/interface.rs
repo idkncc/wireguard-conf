@@ -5,10 +5,15 @@ use ipnet::Ipv4Net;
 use std::convert::Infallible;
 use std::fmt;
 
+#[cfg(feature = "serde")]
+#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
+use serde::{Deserialize, Serialize};
+
 use crate::prelude::*;
 
 /// Controls the routing table to which routes are added.
 #[derive(PartialEq, Eq, Clone, Debug, Default)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum Table {
     /// Routing table
     RoutingTable(usize),
@@ -39,6 +44,7 @@ impl fmt::Display for Table {
 /// [Wireguard docs](https://github.com/pirate/wireguard-docs#interface)
 #[must_use]
 #[derive(Clone, Debug, PartialEq, Builder)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[builder(build_fn(private, name = "fallible_build", error = "Infallible"))]
 pub struct Interface {
     /// Interface's address.

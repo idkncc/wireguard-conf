@@ -1,9 +1,11 @@
 use rand::prelude::*;
 use std::{collections::HashSet, fmt};
 
-use crate::WireguardError;
+#[cfg(feature = "serde")]
+#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
+use serde::{Deserialize, Serialize};
 
-use super::WireguardResult;
+use super::{WireguardError, WireguardResult};
 
 macro_rules! assert_return {
     ($test:expr, $err:expr) => {
@@ -18,6 +20,7 @@ macro_rules! assert_return {
 /// - [Documentation](https://github.com/amnezia-vpn/amneziawg-linux-kernel-module?tab=readme-ov-file#configuration)
 #[must_use]
 #[derive(Clone, Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct AmneziaSettings {
     /// 1 ≤ Jc ≤ 128; recommended range is from 3 to 10 inclusive
     pub jc: usize,
