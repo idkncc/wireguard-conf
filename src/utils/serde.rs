@@ -19,7 +19,7 @@ impl<'de> Deserialize<'de> for PrivateKey {
     {
         struct PrivateKeyVisitor;
 
-        impl<'de> de::Visitor<'de> for PrivateKeyVisitor {
+        impl de::Visitor<'_> for PrivateKeyVisitor {
             type Value = PrivateKey;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
@@ -55,7 +55,7 @@ impl<'de> Deserialize<'de> for PublicKey {
     {
         struct PublicKeyVisitor;
 
-        impl<'de> de::Visitor<'de> for PublicKeyVisitor {
+        impl de::Visitor<'_> for PublicKeyVisitor {
             type Value = PublicKey;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
@@ -91,7 +91,7 @@ impl<'de> Deserialize<'de> for PresharedKey {
     {
         struct PresharedKeyVisitor;
 
-        impl<'de> de::Visitor<'de> for PresharedKeyVisitor {
+        impl de::Visitor<'_> for PresharedKeyVisitor {
             type Value = PresharedKey;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {

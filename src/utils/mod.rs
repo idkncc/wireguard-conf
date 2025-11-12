@@ -9,9 +9,6 @@ use thiserror::Error;
 #[cfg(feature = "amneziawg")]
 #[cfg_attr(docsrs, doc(cfg(feature = "amneziawg")))]
 pub use amnezia::*;
-#[cfg(feature = "serde")]
-#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
-pub use serde::*;
 pub use keys::*;
 
 /// `wireguard-conf` error.

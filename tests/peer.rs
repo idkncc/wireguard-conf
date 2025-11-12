@@ -37,7 +37,7 @@ fn endpoint() {
 fn allowed_ips() {
     let allowed_ips = [as_ipnet!("10.0.0.1/24"), as_ipnet!("0.0.0.0/0")];
 
-    let peer = PeerBuilder::new().allowed_ips(&allowed_ips).build();
+    let peer = PeerBuilder::new().allowed_ips(allowed_ips).build();
 
     assert_eq!(peer.allowed_ips, allowed_ips.to_vec());
 }
