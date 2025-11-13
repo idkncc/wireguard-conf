@@ -7,13 +7,12 @@ use std::fmt;
 
 #[cfg(feature = "serde")]
 #[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer, de};
 
 use crate::prelude::*;
 
 /// Controls the routing table to which routes are added.
 #[derive(PartialEq, Eq, Clone, Debug, Default)]
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum Table {
     /// Routing table
     RoutingTable(usize),
@@ -33,6 +32,57 @@ impl fmt::Display for Table {
             Table::Off => write!(f, "off"),
             Table::Auto => write!(f, "auto"),
         }
+    }
+}
+
+#[cfg(feature = "serde")]
+impl Serialize for Table {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match self {
+            Table::RoutingTable(n) => serializer.serialize_u64(*n as u64),
+            Table::Off => serializer.serialize_str("off"),
+            Table::Auto => serializer.serialize_str("auto"),
+        }
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> Deserialize<'de> for Table {
+    fn deserialize<D>(deserializer: D) -> Result<Table, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct TableVisitor;
+        impl de::Visitor<'_> for TableVisitor {
+            type Value = Table;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("an routing table value (number, off or auto)")
+            }
+            
+            fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+            where
+                E: de::Error,
+            {
+                match value {
+                    "off" => Ok(Table::Off),
+                    "auto" => Ok(Table::Auto),
+                    _ => Err(E::invalid_value(de::Unexpected::Str(value), &self))
+                }
+            }
+
+            fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
+            where
+                E: de::Error,
+            {
+                Ok(Table::RoutingTable(usize::try_from(value).map_err(E::custom)?))
+            }
+        }
+
+        deserializer.deserialize_any(TableVisitor)
     }
 }
 

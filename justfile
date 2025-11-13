@@ -4,11 +4,9 @@ default:
     just --list
 
 test:
-    cargo test {{CFLAGS}}
-test-all:
     cargo test --all-features {{CFLAGS}}
 test-no-capture:
-    cargo test {{CFLAGS}} -- --nocapture
+    cargo test --all-features {{CFLAGS}} -- --nocapture
 
 build:
     cargo build {{CFLAGS}}
