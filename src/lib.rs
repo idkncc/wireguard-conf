@@ -8,7 +8,9 @@
 //!
 //! # Features
 //!
-//! - `amneziawg`: Adds AmneziaWG obfuscation values support.
+//! - `amneziawg` -- adds AmneziaWG obfuscation values support [(see)](https://docs.amnezia.org/documentation/amnezia-wg/).
+//! - `serde` -- adds implementions of [`serde::Serialize`] and [`serde::Deserialize`] for all
+//!   structs.
 //!
 //! # Example
 //!

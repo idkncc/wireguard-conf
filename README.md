@@ -18,17 +18,13 @@ More usage examples in [tests](tests/) and on [docs.rs](https://docs.rs/wireguar
 use wireguard_conf::prelude::*;
 use wireguard_conf::as_ipnet;
 
-use ipnet::Ipv4Net;
-
-// create peer:
 let peer = PeerBuilder::new()
-    .add_allowed_ip(as_ipnet!("10.0.0.2/24"))
+    .allowed_ips([as_ipnet!("10.0.0.2/24")])
     .build();
 
-// create interface with that peer:
 let interface = InterfaceBuilder::new()
     .address(as_ipnet!("10.0.0.1/24"))
-    .add_peer(peer.clone())
+    .peers([peer.clone()])
     .build();
 
 // to export configs, use `println!()`, `writeln!()`, `.to_string()`, etc.
