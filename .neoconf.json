@@ -1,7 +1,0 @@
-{
-    "lspconfig": {
-        "rust-analyzer": {
-                "rust-analyzer.cargo.features": "all"
-        }
-    }
-}

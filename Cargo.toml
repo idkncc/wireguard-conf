@@ -30,6 +30,10 @@ derive_builder = "0.20.2"
 
 serde = { version = "1.0.228", features = ["derive"], optional = true }
 
+[dev-dependencies]
+claims = "0.8.0"
+serde_assert = "0.8.0"
+
 # Doc all features
 [package.metadata.docs.rs]
 all-features = true
