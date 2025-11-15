@@ -1,13 +1,6 @@
 use wireguard_conf::as_ipnet;
 use wireguard_conf::prelude::*;
 
-#[cfg(feature = "serde")]
-use claims::assert_ok_eq;
-#[cfg(feature = "serde")]
-use serde::Serialize;
-#[cfg(feature = "serde")]
-use serde_assert::{Serializer, Token};
-
 #[test]
 fn empty_interface() {
     let interface = InterfaceBuilder::new().build();
