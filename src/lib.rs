@@ -2,12 +2,15 @@
 //!
 //! - Use [`InterfaceBuilder`] and [`PeerBuilder`] for interface/peers creation.
 //! - Use [`Interface`]'s and [`Peer`]'s [`std::fmt::Display`] for exporting  Wireguard config (`.to_string()`, [`write!()`], etc).
-//! - Use [`PrivateKey`] and [`PublicKey`] for generating, importing keys.
+//! - Use [`PrivateKey`], [`PublicKey`] and [`PresharedKey`] for generating, importing and
+//!   exporting keys.
 //! - Use [`AmneziaSettings`] for generating/using AmneziaWG obfuscation values.
 //!
 //! # Features
 //!
-//! - `amneziawg`: Adds AmneziaWG obfuscation values support.
+//! - `amneziawg` -- adds AmneziaWG obfuscation values support [(see)](https://docs.amnezia.org/documentation/amnezia-wg/).
+//! - `serde` -- adds implementions of [`serde::Serialize`] and [`serde::Deserialize`] for all
+//!   structs.
 //!
 //! # Example
 //!
@@ -15,15 +18,13 @@
 //! use wireguard_conf::prelude::*;
 //! use wireguard_conf::as_ipnet;
 //!
-//! use ipnet::Ipv4Net;
-//!
 //! let peer = PeerBuilder::new()
-//!     .add_allowed_ip(as_ipnet!("10.0.0.2/24"))
+//!     .allowed_ips([as_ipnet!("10.0.0.2/24")])
 //!     .build();
 //!
 //! let interface = InterfaceBuilder::new()
 //!     .address(as_ipnet!("10.0.0.1/24"))
-//!     .add_peer(peer.clone())
+//!     .peers([peer.clone()])
 //!     .build();
 //!
 //! // to export configs, use `println!()`, `writeln!()`, `.to_string()`, etc.

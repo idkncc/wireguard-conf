@@ -1,7 +1,13 @@
+use derive_builder::Builder;
 use either::Either;
 use ipnet::Ipv4Net;
 
+use std::convert::Infallible;
 use std::fmt;
+
+#[cfg(feature = "serde")]
+#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
+use serde::{Deserialize, Deserializer, Serialize, Serializer, de};
 
 use crate::prelude::*;
 
@@ -29,6 +35,57 @@ impl fmt::Display for Table {
     }
 }
 
+#[cfg(feature = "serde")]
+impl Serialize for Table {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match self {
+            Table::RoutingTable(n) => serializer.serialize_u64(*n as u64),
+            Table::Off => serializer.serialize_str("off"),
+            Table::Auto => serializer.serialize_str("auto"),
+        }
+    }
+}
+
+#[cfg(feature = "serde")]
+impl<'de> Deserialize<'de> for Table {
+    fn deserialize<D>(deserializer: D) -> Result<Table, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct TableVisitor;
+        impl de::Visitor<'_> for TableVisitor {
+            type Value = Table;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                formatter.write_str("an routing table value (number, off or auto)")
+            }
+            
+            fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+            where
+                E: de::Error,
+            {
+                match value {
+                    "off" => Ok(Table::Off),
+                    "auto" => Ok(Table::Auto),
+                    _ => Err(E::invalid_value(de::Unexpected::Str(value), &self))
+                }
+            }
+
+            fn visit_u64<E>(self, value: u64) -> Result<Self::Value, E>
+            where
+                E: de::Error,
+            {
+                Ok(Table::RoutingTable(usize::try_from(value).map_err(E::custom)?))
+            }
+        }
+
+        deserializer.deserialize_any(TableVisitor)
+    }
+}
+
 /// Struct, that represents complete configuration (contains both `[Interface]` and `[Peer]`
 /// sections).
 ///
@@ -36,26 +93,32 @@ impl fmt::Display for Table {
 ///
 /// [Wireguard docs](https://github.com/pirate/wireguard-docs#interface)
 #[must_use]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Builder)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[builder(build_fn(private, name = "fallible_build", error = "Infallible"))]
 pub struct Interface {
     /// Interface's address.
     ///
     /// [Wireguard docs](https://github.com/pirate/wireguard-docs#address)
+    #[builder(default)]
     pub address: Ipv4Net,
 
     /// Port to listen for incoming VPN connections.
     ///
     /// [Wireguard conf](https://github.com/pirate/wireguard-docs#listenport)
+    #[builder(setter(strip_option), default)]
     pub listen_port: Option<u16>,
 
     /// Node's private key.
     ///
     /// [Wireguard conf](https://github.com/pirate/wireguard-docs#privatekey)
+    #[builder(default = "PrivateKey::random()")]
     pub private_key: PrivateKey,
 
     /// The DNS servers to announce to VPN clients via DHCP.
     ///
     /// [Wireguard docs](https://github.com/pirate/wireguard-docs#dns-2)
+    #[builder(setter(into, strip_option), default)]
     pub dns: Vec<String>,
 
     /// Endpoint.
@@ -65,6 +128,7 @@ pub struct Interface {
     ///
     /// [Wireguard Docs for `# Name`](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#-name-1);
     /// [Wireguard Docs for endpoint](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#endpoint)
+    #[builder(setter(into, strip_option), default)]
     pub endpoint: Option<String>,
 
     /// Routing table to use for the WireGuard routes.
@@ -72,11 +136,13 @@ pub struct Interface {
     /// See [`Table`] for special values.
     ///
     /// [Wireguard docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#table)
+    #[builder(setter(strip_option), default)]
     pub table: Option<Table>,
 
     /// Maximum Transmission Unit (MTU, aka packet/frame size) to use when connecting to the peer.
     ///
     /// [Wireguard docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#mtu)
+    #[builder(setter(strip_option), default)]
     pub mtu: Option<usize>,
 
     /// AmneziaWG obfuscation values.
@@ -84,26 +150,31 @@ pub struct Interface {
     /// [AmneziaWG Docs](https://github.com/amnezia-vpn/amneziawg-linux-kernel-module?tab=readme-ov-file#configuration)
     #[cfg(feature = "amneziawg")]
     #[cfg_attr(docsrs, doc(cfg(feature = "amneziawg")))]
+    #[builder(setter(strip_option), default)]
     pub amnezia_settings: Option<AmneziaSettings>,
 
     /// Commands, that will be executed before the interface is brought up
     ///
     /// [Wireguard docs](https://github.com/pirate/wireguard-docs#preup)
+    #[builder(setter(into), default)]
     pub pre_up: Vec<String>,
 
     /// Commands, that will be executed before the interface is brought down
     ///
     /// [Wireguard docs](https://github.com/pirate/wireguard-docs#predown)
+    #[builder(setter(into), default)]
     pub pre_down: Vec<String>,
 
     /// Commands, that will be executed after the interface is brought up
     ///
     /// [Wireguard docs](https://github.com/pirate/wireguard-docs#postup)
+    #[builder(setter(into), default)]
     pub post_up: Vec<String>,
 
     /// Commands, that will be executed after the interface is brought down
     ///
     /// [Wireguard docs](https://github.com/pirate/wireguard-docs#postdown)
+    #[builder(setter(into), default)]
     pub post_down: Vec<String>,
 
     /// Peers.
@@ -111,6 +182,7 @@ pub struct Interface {
     /// Create them using [`PeerBuilder`] or [`Interface::to_peer`] method.
     ///
     /// [Wireguard docs](https://github.com/pirate/wireguard-docs#peer)
+    #[builder(setter(into), default)]
     pub peers: Vec<Peer>,
 }
 
@@ -129,7 +201,7 @@ impl Interface {
     /// // Create client node, and add server to client's peers
     /// let client = InterfaceBuilder::new()
     ///     // <snip>
-    ///     .add_peer(server.to_peer()) // convert `Interface` to `Peer` using `.to_peer()` method.
+    ///     .peers([server.to_peer()]) // convert `Interface` to `Peer` using `.to_peer()` method.
     ///     .build();
     ///
     /// // Add client to server's peers
@@ -143,11 +215,35 @@ impl Interface {
             endpoint: self.endpoint.clone(),
             allowed_ips: vec![self.address],
             key: Either::Left(self.private_key.clone()),
+            preshared_key: None,
             persistent_keepalive: 0,
 
             #[cfg(feature = "amneziawg")]
             amnezia_settings: self.amnezia_settings.clone(),
         }
+    }
+}
+
+impl InterfaceBuilder {
+    /// Create new `InterfaceBuilder`.
+    ///
+    /// ```rust
+    /// # use wireguard_conf::prelude::*;
+    /// # use wireguard_conf::as_ipnet;
+    /// #
+    /// let interface = InterfaceBuilder::new()
+    ///     .address(as_ipnet!("10.0.0.1/24"))
+    ///     // <snip>
+    ///     .build();
+    /// ```
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Builds an `Interface`.
+    pub fn build(&self) -> Interface {
+        self.fallible_build().unwrap_or_else(|_| unreachable!())
     }
 }
 

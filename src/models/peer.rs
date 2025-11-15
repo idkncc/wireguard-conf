@@ -1,7 +1,13 @@
+use derive_builder::Builder;
 use either::Either;
 use ipnet::Ipv4Net;
 
+use std::convert::Infallible;
 use std::fmt;
+
+#[cfg(feature = "serde")]
+#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
+use serde::{Deserialize, Serialize};
 
 use crate::prelude::*;
 
@@ -9,16 +15,20 @@ use crate::prelude::*;
 ///
 /// [Wireguard docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#peer)
 #[must_use]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Builder)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+#[builder(build_fn(private, name = "fallible_build", error = "Infallible"))]
 pub struct Peer {
     /// Peer's endpoint.
     ///
     /// [Wireguard Docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#endpoint)
+    #[builder(setter(into, strip_option), default)]
     pub endpoint: Option<String>,
 
     /// Peer's allowed IPs.
     ///
     /// [Wireguard Docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#allowedips)
+    #[builder(setter(into, strip_option), default)]
     pub allowed_ips: Vec<Ipv4Net>,
 
     /// Peer's persistent keepalive.
@@ -29,20 +39,66 @@ pub struct Peer {
     /// Setting this value to `0` omits it in config.
     ///
     /// [Wireguard docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#persistentkeepalive)
+    #[builder(default)]
     pub persistent_keepalive: u16,
 
     /// Peer's key.
     ///
     /// If [`PrivateKey`] is provided, then peer can be exported to interface & full config.
     /// Otherwise only to peer section of config.
+    #[builder(default = Either::Left(PrivateKey::random()))]
     pub key: Either<PrivateKey, PublicKey>,
+
+    /// Peer's preshared-key.
+    #[builder(setter(strip_option), default)]
+    pub preshared_key: Option<PresharedKey>,
 
     /// AmneziaWG settings.
     ///
     /// Used for packet obfuscation.
     #[cfg(feature = "amneziawg")]
     #[cfg_attr(docsrs, doc(cfg(feature = "amneziawg")))]
+    #[builder(setter(strip_option), default)]
     pub amnezia_settings: Option<AmneziaSettings>,
+}
+
+impl PeerBuilder {
+    /// Create new `InterfaceBuilder`.
+    ///
+    /// ```rust
+    /// # use wireguard_conf::prelude::*;
+    /// # use wireguard_conf::as_ipnet;
+    /// #
+    /// let interface = PeerBuilder::new()
+    ///     .allowed_ips([as_ipnet!("0.0.0.0/0")])
+    ///     // <snip>
+    ///     .build();
+    /// ```
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Sets private key.
+    ///
+    /// Shorthand for `.key(Either::Left(value))`.
+    pub fn private_key(&mut self, value: PrivateKey) -> &mut Self {
+        self.key = Some(Either::Left(value));
+        self
+    }
+
+    /// Sets public key.
+    ///
+    /// Shorthand for `.key(Either::Right(value))`.
+    pub fn public_key(&mut self, value: PublicKey) -> &mut Self {
+        self.key = Some(Either::Right(value));
+        self
+    }
+
+    /// Builds an `Interface`.
+    pub fn build(&self) -> Peer {
+        self.fallible_build().unwrap_or_else(|_| unreachable!())
+    }
 }
 
 impl Peer {
@@ -118,6 +174,9 @@ impl fmt::Display for Peer {
             "PublicKey = {}",
             self.key.clone().right_or_else(|key| PublicKey::from(&key))
         )?;
+        if let Some(preshared_key) = &self.preshared_key {
+            writeln!(f, "PresharedKey = {preshared_key}")?;
+        }
         if self.persistent_keepalive != 0 {
             writeln!(f, "PersistentKeepalive = {}", self.persistent_keepalive)?;
         }

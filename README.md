@@ -18,17 +18,13 @@ More usage examples in [tests](tests/) and on [docs.rs](https://docs.rs/wireguar
 use wireguard_conf::prelude::*;
 use wireguard_conf::as_ipnet;
 
-use ipnet::Ipv4Net;
-
-// create peer:
 let peer = PeerBuilder::new()
-    .add_allowed_ip(as_ipnet!("10.0.0.2/24"))
+    .allowed_ips([as_ipnet!("10.0.0.2/24")])
     .build();
 
-// create interface with that peer:
 let interface = InterfaceBuilder::new()
     .address(as_ipnet!("10.0.0.1/24"))
-    .add_peer(peer.clone())
+    .peers([peer.clone()])
     .build();
 
 // to export configs, use `println!()`, `writeln!()`, `.to_string()`, etc.
@@ -44,18 +40,19 @@ println!("{}", peer.to_interface(&interface).unwrap());
 
 - `amneziawg`: adds support for generating/using [AmneziaWG](https://docs.amnezia.org/documentation/amnezia-wg/) obfuscation values.
 
-### How2Contribute
+### Contributing
 
-1. Fork it, clone it
-2. Add changes
-3. Format and lint code:
-   ```shell
-   cargo fmt
-   cargo clippy
+1. Fork & clone
+2. Install Rust, Cargo, etc. On nix you can start devshell (`nix develop -c $SHELL`)
+3. Make changes
+4. Format and lint code:
    ```
-4. Commit changes (use [Conventional commits](https://www.conventionalcommits.org/en/v1.0.0/))
+   just fmt
+   just lint
+   # or fix automatically: just lint-fix
+   ```
+5. Commit changes (use [Conventional commits](https://www.conventionalcommits.org/en/v1.0.0/))
    ```shell
    git commit -m "feat: did something"
    ```
-5. Create PR
-6. PROFIT
+6. Send ~patches~ PR

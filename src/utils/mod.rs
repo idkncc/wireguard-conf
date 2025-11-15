@@ -1,5 +1,7 @@
 #[cfg(feature = "amneziawg")]
 mod amnezia;
+#[cfg(feature = "serde")]
+mod serde;
 mod keys;
 
 use thiserror::Error;
@@ -19,6 +21,10 @@ pub enum WireguardError {
     /// Error, when public key is invalid.
     #[error("invalid public key")]
     InvalidPublicKey,
+    
+    /// Error, when preshared key is invalid.
+    #[error("invalid preshared key")]
+    InvalidPresharedKey,
 
     /// Error, when private key isn't provided.
     #[error("no private key provided")]
