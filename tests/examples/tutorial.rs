@@ -65,7 +65,7 @@ fn all_fields() {
 
     let server_conf = server_interface.to_string();
     let peer1_conf = peer1_interface.to_string();
-    
+
     // tests part
     let server_public_key = PublicKey::from(&server_private_key);
     let peer1_public_key = PublicKey::from(&peer1_private_key);

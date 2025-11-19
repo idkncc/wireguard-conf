@@ -1,6 +1,6 @@
 use derive_builder::Builder;
 use either::Either;
-use ipnet::{IpNet, Ipv4Net};
+use ipnet::IpNet;
 
 use std::convert::Infallible;
 use std::fmt;

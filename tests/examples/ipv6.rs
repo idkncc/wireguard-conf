@@ -1,6 +1,5 @@
-use ipnet::IpNet;
-use wireguard_conf::{as_ipnet, prelude::*};
 use indoc::formatdoc;
+use wireguard_conf::{as_ipnet, prelude::*};
 
 /// Example of using IPv6 and multiple addresses.
 #[test]
@@ -20,7 +19,7 @@ fn ipv6_and_multiple_addresses() {
 
     let server_privkey = server_interface.private_key.clone();
     let server_publickey = PublicKey::from(&server_privkey);
-    
+
     let client_privkey = client_interface.private_key.clone();
     let client_publickey = PublicKey::from(&client_privkey);
 

@@ -1,11 +1,11 @@
 use derive_builder::Builder;
 use either::Either;
-use ipnet::{IpNet, Ipv4Net};
+use ipnet::IpNet;
 use itertools::Itertools as _;
 
-use std::net::{Ipv4Addr};
 use std::convert::Infallible;
 use std::fmt;
+use std::net::Ipv4Addr;
 
 #[cfg(feature = "serde")]
 #[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
@@ -106,7 +106,10 @@ pub struct Interface {
     /// - `/32` ipnets will be generated as regular ips (f.e. 1.2.3.4/32 -> 1.2.3.4)
     ///
     /// [Wireguard docs](https://github.com/pirate/wireguard-docs#address)
-    #[builder(setter(into), default = "vec![IpNet::new_assert(Ipv4Addr::UNSPECIFIED.into(), 0)]")]
+    #[builder(
+        setter(into),
+        default = "vec![IpNet::new_assert(Ipv4Addr::UNSPECIFIED.into(), 0)]"
+    )]
     pub address: Vec<IpNet>,
 
     /// Port to listen for incoming VPN connections.
@@ -277,7 +280,7 @@ impl fmt::Display for Interface {
         writeln!(
             f,
             "Address = {}",
-            self.address.iter().map(|net| net.to_string()).join(",")
+            self.address.iter().map(ToString::to_string).join(",")
         )?;
         if let Some(listen_port) = self.listen_port {
             writeln!(f, "ListenPort = {listen_port}")?;
