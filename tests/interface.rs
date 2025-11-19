@@ -10,7 +10,7 @@ fn empty_interface() {
     assert_eq!(
         interface,
         Interface {
-            address: as_ipnet!("0.0.0.0/0"),
+            address: vec![as_ipnet!("0.0.0.0/0")],
             listen_port: None,
             private_key,
             dns: vec![],
@@ -33,10 +33,10 @@ fn empty_interface() {
 #[test]
 fn address() {
     let interface = InterfaceBuilder::new()
-        .address(as_ipnet!("1.2.3.4/16"))
+        .address([as_ipnet!("1.2.3.4/16")])
         .build();
 
-    assert_eq!(interface.address, as_ipnet!("1.2.3.4/16"));
+    assert_eq!(interface.address, vec![as_ipnet!("1.2.3.4/16")]);
 }
 
 #[test]

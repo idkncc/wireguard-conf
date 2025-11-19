@@ -1,6 +1,6 @@
 use derive_builder::Builder;
 use either::Either;
-use ipnet::Ipv4Net;
+use ipnet::{IpNet, Ipv4Net};
 
 use std::convert::Infallible;
 use std::fmt;
@@ -27,9 +27,11 @@ pub struct Peer {
 
     /// Peer's allowed IPs.
     ///
+    /// - */32 and */128 ipnets will be generated as regular ips (f.e. 1.2.3.4/32 -> 1.2.3.4)
+    ///
     /// [Wireguard Docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#allowedips)
-    #[builder(setter(into, strip_option), default)]
-    pub allowed_ips: Vec<Ipv4Net>,
+    #[builder(setter(into), default)]
+    pub allowed_ips: Vec<IpNet>,
 
     /// Peer's persistent keepalive.
     ///
@@ -118,16 +120,24 @@ impl Peer {
             return Err(WireguardError::NoPrivateKeyProvided);
         };
 
-        let assigned_ip = *self
+        let assigned_ips: Vec<IpNet> = self
             .allowed_ips
             .iter()
-            .find(|&net| interface.address.contains(net))
-            .ok_or(WireguardError::NoAssignedIP)?;
+            .filter_map(|allowed_ip| {
+                for server_address in &interface.address {
+                    if server_address.contains(allowed_ip) {
+                        return IpNet::new(allowed_ip.addr(), server_address.prefix_len()).ok();
+                    }
+                }
+
+                None
+            })
+            .collect();
 
         Ok(Interface {
             endpoint: None,
 
-            address: assigned_ip,
+            address: assigned_ips,
             listen_port: None,
             private_key,
             dns: interface.dns.clone(),

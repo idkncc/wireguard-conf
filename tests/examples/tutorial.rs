@@ -16,7 +16,9 @@ fn all_fields() {
     let output_interface = "ens0";
 
     let mut server_interface = InterfaceBuilder::new()
-        .address(as_ipnet!("10.0.0.1/24"))
+        // also you can use:
+        //   .add_address(as_ipnet!("10.0.0.1/24"))
+        .address([as_ipnet!("10.0.0.1/24")])
         .listen_port(51820)
         .private_key(server_private_key.clone())
         .dns(["1.1.1.1".to_string(), "1.0.0.1".to_string()])

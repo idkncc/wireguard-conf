@@ -1,13 +1,15 @@
 use derive_builder::Builder;
 use either::Either;
-use ipnet::Ipv4Net;
+use ipnet::{IpNet, Ipv4Net};
+use itertools::Itertools as _;
 
+use std::net::{Ipv4Addr};
 use std::convert::Infallible;
 use std::fmt;
 
 #[cfg(feature = "serde")]
 #[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
-use serde::{Deserialize, Deserializer, Serialize, Serializer, de};
+use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::prelude::*;
 
@@ -62,7 +64,7 @@ impl<'de> Deserialize<'de> for Table {
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
                 formatter.write_str("an routing table value (number, off or auto)")
             }
-            
+
             fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
             where
                 E: de::Error,
@@ -70,7 +72,7 @@ impl<'de> Deserialize<'de> for Table {
                 match value {
                     "off" => Ok(Table::Off),
                     "auto" => Ok(Table::Auto),
-                    _ => Err(E::invalid_value(de::Unexpected::Str(value), &self))
+                    _ => Err(E::invalid_value(de::Unexpected::Str(value), &self)),
                 }
             }
 
@@ -78,7 +80,9 @@ impl<'de> Deserialize<'de> for Table {
             where
                 E: de::Error,
             {
-                Ok(Table::RoutingTable(usize::try_from(value).map_err(E::custom)?))
+                Ok(Table::RoutingTable(
+                    usize::try_from(value).map_err(E::custom)?,
+                ))
             }
         }
 
@@ -99,9 +103,11 @@ impl<'de> Deserialize<'de> for Table {
 pub struct Interface {
     /// Interface's address.
     ///
+    /// - `/32` ipnets will be generated as regular ips (f.e. 1.2.3.4/32 -> 1.2.3.4)
+    ///
     /// [Wireguard docs](https://github.com/pirate/wireguard-docs#address)
-    #[builder(default)]
-    pub address: Ipv4Net,
+    #[builder(setter(into), default = "vec![IpNet::new_assert(Ipv4Addr::UNSPECIFIED.into(), 0)]")]
+    pub address: Vec<IpNet>,
 
     /// Port to listen for incoming VPN connections.
     ///
@@ -213,7 +219,7 @@ impl Interface {
     pub fn to_peer(&self) -> Peer {
         Peer {
             endpoint: self.endpoint.clone(),
-            allowed_ips: vec![self.address],
+            allowed_ips: self.address.clone(),
             key: Either::Left(self.private_key.clone()),
             preshared_key: None,
             persistent_keepalive: 0,
@@ -232,13 +238,28 @@ impl InterfaceBuilder {
     /// # use wireguard_conf::as_ipnet;
     /// #
     /// let interface = InterfaceBuilder::new()
-    ///     .address(as_ipnet!("10.0.0.1/24"))
+    ///     .address([as_ipnet!("10.0.0.1/24")])
     ///     // <snip>
     ///     .build();
     /// ```
     #[must_use]
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Adds single address.
+    ///
+    /// `value` is `Into<IpNet>`, which means that it can be either [`ipnet::IpNet`] or [`std::net::IpAddr`].
+    pub fn add_address<T: Into<IpNet>>(&mut self, value: T) -> &mut Self {
+        if self.address.is_none() {
+            self.address = Some(Vec::with_capacity(1));
+        }
+
+        self.address
+            .as_mut()
+            .unwrap_or_else(|| unreachable!())
+            .push(value.into());
+        self
     }
 
     /// Builds an `Interface`.
@@ -253,7 +274,11 @@ impl fmt::Display for Interface {
         if let Some(endpoint) = &self.endpoint {
             writeln!(f, "# Name = {endpoint}")?;
         }
-        writeln!(f, "Address = {}", self.address)?;
+        writeln!(
+            f,
+            "Address = {}",
+            self.address.iter().map(|net| net.to_string()).join(",")
+        )?;
         if let Some(listen_port) = self.listen_port {
             writeln!(f, "ListenPort = {listen_port}")?;
         }

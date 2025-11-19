@@ -23,7 +23,7 @@
 //!     .build();
 //!
 //! let interface = InterfaceBuilder::new()
-//!     .address(as_ipnet!("10.0.0.1/24"))
+//!     .address([as_ipnet!("10.0.0.1/24")])
 //!     .peers([peer.clone()])
 //!     .build();
 //!
