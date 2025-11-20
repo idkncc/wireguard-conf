@@ -1,7 +1,6 @@
 use indoc::formatdoc;
 use wireguard_conf::{as_ipnet, prelude::*};
 
-/// Example of using IPv6 and multiple addresses.
 #[test]
 fn ipv6_and_multiple_addresses() {
     let mut server_interface = InterfaceBuilder::new()

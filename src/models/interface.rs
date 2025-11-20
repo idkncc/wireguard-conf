@@ -344,7 +344,19 @@ impl fmt::Display for Interface {
         writeln!(
             f,
             "Address = {}",
-            self.address.iter().map(ToString::to_string).join(",")
+            self.address
+                .iter()
+                .map(ToString::to_string)
+                .map(|addr| {
+                    if addr.ends_with("/32") {
+                        addr.trim_end_matches("/32").to_owned()
+                    } else if addr.ends_with("/128") {
+                        addr.trim_end_matches("/128").to_owned()
+                    } else {
+                        addr
+                    }
+                })
+                .join(",")
         )?;
         if let Some(listen_port) = self.listen_port {
             writeln!(f, "ListenPort = {listen_port}")?;
