@@ -1,13 +1,15 @@
 use derive_builder::Builder;
 use either::Either;
-use ipnet::Ipv4Net;
+use ipnet::IpNet;
+use itertools::Itertools as _;
 
-use std::convert::Infallible;
 use std::fmt;
+use std::net::Ipv4Addr;
+use std::{convert::Infallible, net::IpAddr};
 
 #[cfg(feature = "serde")]
 #[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
-use serde::{Deserialize, Deserializer, Serialize, Serializer, de};
+use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::prelude::*;
 
@@ -62,7 +64,7 @@ impl<'de> Deserialize<'de> for Table {
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
                 formatter.write_str("an routing table value (number, off or auto)")
             }
-            
+
             fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
             where
                 E: de::Error,
@@ -70,7 +72,7 @@ impl<'de> Deserialize<'de> for Table {
                 match value {
                     "off" => Ok(Table::Off),
                     "auto" => Ok(Table::Auto),
-                    _ => Err(E::invalid_value(de::Unexpected::Str(value), &self))
+                    _ => Err(E::invalid_value(de::Unexpected::Str(value), &self)),
                 }
             }
 
@@ -78,7 +80,9 @@ impl<'de> Deserialize<'de> for Table {
             where
                 E: de::Error,
             {
-                Ok(Table::RoutingTable(usize::try_from(value).map_err(E::custom)?))
+                Ok(Table::RoutingTable(
+                    usize::try_from(value).map_err(E::custom)?,
+                ))
             }
         }
 
@@ -99,9 +103,17 @@ impl<'de> Deserialize<'de> for Table {
 pub struct Interface {
     /// Interface's address.
     ///
+    /// `/32` and `/128` IP networks will be generated as regular ips (f.e. `1.2.3.4/32` -> `1.2.3.4`)
+    ///
+    /// You can also use [`InterfaceBuilder::add_network()`] to add a single network and
+    /// [`InterfaceBuilder::add_address()`] to add a single address.
+    ///
     /// [Wireguard docs](https://github.com/pirate/wireguard-docs#address)
-    #[builder(default)]
-    pub address: Ipv4Net,
+    #[builder(
+        setter(into),
+        default = "vec![IpNet::new_assert(Ipv4Addr::UNSPECIFIED.into(), 0)]"
+    )]
+    pub address: Vec<IpNet>,
 
     /// Port to listen for incoming VPN connections.
     ///
@@ -213,7 +225,7 @@ impl Interface {
     pub fn to_peer(&self) -> Peer {
         Peer {
             endpoint: self.endpoint.clone(),
-            allowed_ips: vec![self.address],
+            allowed_ips: self.address.clone(),
             key: Either::Left(self.private_key.clone()),
             preshared_key: None,
             persistent_keepalive: 0,
@@ -232,13 +244,89 @@ impl InterfaceBuilder {
     /// # use wireguard_conf::as_ipnet;
     /// #
     /// let interface = InterfaceBuilder::new()
-    ///     .address(as_ipnet!("10.0.0.1/24"))
+    ///     .address([as_ipnet!("10.0.0.1/24")])
     ///     // <snip>
     ///     .build();
     /// ```
     #[must_use]
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// Adds IP Network to `Address = ...` field.
+    ///
+    /// `value` is [`Into<IpNet>`], which means that it can be either [`ipnet::IpNet`] or [`std::net::IpAddr`].
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use wireguard_conf::{as_ipnet, prelude::*};
+    ///
+    /// let interface = InterfaceBuilder::new()
+    ///     .add_network(as_ipnet!("1.2.3.4/16"))
+    ///     .add_network(as_ipnet!("fd00:DEAD:BEEF::1/48"))
+    ///     .build();
+    ///
+    /// assert_eq!(
+    ///     interface.address,
+    ///     vec![
+    ///         as_ipnet!("1.2.3.4/16"),
+    ///         as_ipnet!("fd00:DEAD:BEEF::1/48")
+    ///     ]
+    /// );
+    /// ```
+    pub fn add_network<T: Into<IpNet>>(&mut self, value: T) -> &mut Self {
+        if self.address.is_none() {
+            self.address = Some(Vec::with_capacity(1));
+        }
+
+        self.address
+            .as_mut()
+            .unwrap_or_else(|| unreachable!())
+            .push(value.into());
+        self
+    }
+
+    /// Adds IP address to `Address = ...` field.
+    ///
+    /// `value` is [`Into<IpAddr>`], which means that it can be either [`std::net::Ipv4Addr`] or [`std::net::Ipv6Addr`].
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use wireguard_conf::{as_ipaddr, as_ipnet, prelude::*};
+    ///
+    /// let interface = InterfaceBuilder::new()
+    ///     .add_address(as_ipaddr!("1.2.3.4"))
+    ///     .add_address(as_ipaddr!("fd00::1"))
+    ///     .build();
+    ///
+    /// // /32 and /128 are added automatically
+    /// assert_eq!(
+    ///     interface.address,
+    ///     vec![
+    ///         as_ipnet!("1.2.3.4/32"),
+    ///         as_ipnet!("fd00::1/128"),
+    ///     ]
+    /// );
+    /// ```
+    pub fn add_address<T: Into<IpAddr>>(&mut self, value: T) -> &mut Self {
+        if self.address.is_none() {
+            self.address = Some(Vec::with_capacity(1));
+        }
+
+        let ip_addr = value.into();
+        let ip_net = if ip_addr.is_ipv4() {
+            IpNet::new_assert(ip_addr, 32) // 1.2.3.4/32
+        } else {
+            IpNet::new_assert(ip_addr, 128) // fd00::1/128
+        };
+
+        self.address
+            .as_mut()
+            .unwrap_or_else(|| unreachable!())
+            .push(ip_net);
+        self
     }
 
     /// Builds an `Interface`.
@@ -253,7 +341,23 @@ impl fmt::Display for Interface {
         if let Some(endpoint) = &self.endpoint {
             writeln!(f, "# Name = {endpoint}")?;
         }
-        writeln!(f, "Address = {}", self.address)?;
+        writeln!(
+            f,
+            "Address = {}",
+            self.address
+                .iter()
+                .map(ToString::to_string)
+                .map(|addr| {
+                    if addr.ends_with("/32") {
+                        addr.trim_end_matches("/32").to_owned()
+                    } else if addr.ends_with("/128") {
+                        addr.trim_end_matches("/128").to_owned()
+                    } else {
+                        addr
+                    }
+                })
+                .join(",")
+        )?;
         if let Some(listen_port) = self.listen_port {
             writeln!(f, "ListenPort = {listen_port}")?;
         }

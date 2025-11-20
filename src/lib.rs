@@ -14,7 +14,7 @@
 //!
 //! # Example
 //!
-//! ```
+//! ```rust
 //! use wireguard_conf::prelude::*;
 //! use wireguard_conf::as_ipnet;
 //!
@@ -23,7 +23,7 @@
 //!     .build();
 //!
 //! let interface = InterfaceBuilder::new()
-//!     .address(as_ipnet!("10.0.0.1/24"))
+//!     .address([as_ipnet!("10.0.0.1/24")])
 //!     .peers([peer.clone()])
 //!     .build();
 //!
@@ -33,7 +33,7 @@
 //! println!("{}\n", interface);
 //!
 //! println!("Client's config:");
-//! println!("{}", peer.to_interface(&interface).unwrap());
+//! println!("{}", peer.to_interface(&interface, ToInterfaceOptions::new()).unwrap());
 //! ```
 
 #![warn(clippy::pedantic)]
@@ -46,6 +46,8 @@ mod models;
 mod utils;
 
 pub mod prelude;
+
+pub use ipnet;
 
 pub use models::*;
 pub use utils::*;

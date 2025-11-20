@@ -2,6 +2,7 @@
 mod amnezia;
 #[cfg(feature = "serde")]
 mod serde;
+
 mod keys;
 
 use thiserror::Error;
@@ -9,6 +10,7 @@ use thiserror::Error;
 #[cfg(feature = "amneziawg")]
 #[cfg_attr(docsrs, doc(cfg(feature = "amneziawg")))]
 pub use amnezia::*;
+
 pub use keys::*;
 
 /// `wireguard-conf` error.
@@ -21,7 +23,7 @@ pub enum WireguardError {
     /// Error, when public key is invalid.
     #[error("invalid public key")]
     InvalidPublicKey,
-    
+
     /// Error, when preshared key is invalid.
     #[error("invalid preshared key")]
     InvalidPresharedKey,

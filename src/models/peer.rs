@@ -1,15 +1,52 @@
 use derive_builder::Builder;
 use either::Either;
-use ipnet::Ipv4Net;
+use ipnet::IpNet;
 
-use std::convert::Infallible;
 use std::fmt;
+use std::net::{IpAddr, Ipv6Addr};
+use std::{convert::Infallible, net::Ipv4Addr};
 
 #[cfg(feature = "serde")]
 #[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 use serde::{Deserialize, Serialize};
 
 use crate::prelude::*;
+
+/// Options for [`Peer::to_interface()`].
+#[derive(Clone, Copy, Debug, PartialEq, Default)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+pub struct ToInterfaceOptions {
+    /// Option, for setting server as default gateway.
+    default_gateway: bool,
+
+    /// Option, for setting persistent keepalive to client's peer.
+    persistent_keepalive: u16,
+}
+
+impl ToInterfaceOptions {
+    /// Create new [`ToInterfaceOptions`].
+    #[must_use]
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Sets server as default gateway.
+    ///
+    /// When client interface will be generated, it will set `client_interface.peers[0].allowed_ips` to `0.0.0.0/0`
+    #[must_use]
+    pub fn default_gateway(mut self, value: bool) -> Self {
+        self.default_gateway = value;
+        self
+    }
+
+    /// Sets persistent keepalive to client's peer.
+    ///
+    #[must_use]
+    pub fn persistent_keepalive(mut self, value: u16) -> Self {
+        self.persistent_keepalive = value;
+        self
+    }
+}
 
 /// Struct, that represents `[Peer]` section in configuration.
 ///
@@ -27,9 +64,11 @@ pub struct Peer {
 
     /// Peer's allowed IPs.
     ///
+    /// - */32 and */128 ipnets will be generated as regular ips (f.e. 1.2.3.4/32 -> 1.2.3.4)
+    ///
     /// [Wireguard Docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#allowedips)
-    #[builder(setter(into, strip_option), default)]
-    pub allowed_ips: Vec<Ipv4Net>,
+    #[builder(setter(into), default)]
+    pub allowed_ips: Vec<IpNet>,
 
     /// Peer's persistent keepalive.
     ///
@@ -102,9 +141,9 @@ impl PeerBuilder {
 }
 
 impl Peer {
-    /// Get Peer's [`Interface`].
+    /// Generate [`Interface`] from client's [`Peer`] and server's [`Interface`].
     ///
-    /// Pass server's interface to `interface` argument.
+    /// `options`
     ///
     /// # Errors
     ///
@@ -113,24 +152,40 @@ impl Peer {
     /// - [`WireguardError::NoAssignedIP`] -- no assigned ip found.
     ///   This means that your peer doesn't have allowed ip, that is in interface's addresses
     ///   network.
-    pub fn to_interface(&self, interface: &Interface) -> WireguardResult<Interface> {
+    pub fn to_interface(
+        &self,
+        server_interface: &Interface,
+        options: ToInterfaceOptions,
+    ) -> WireguardResult<Interface> {
         let Either::Left(private_key) = self.key.clone() else {
             return Err(WireguardError::NoPrivateKeyProvided);
         };
 
-        let assigned_ip = *self
+        let assigned_ips: Vec<IpNet> = self
             .allowed_ips
             .iter()
-            .find(|&net| interface.address.contains(net))
-            .ok_or(WireguardError::NoAssignedIP)?;
+            .filter_map(|allowed_ip| {
+                for server_address in &server_interface.address {
+                    if server_address.contains(allowed_ip) {
+                        return IpNet::new(allowed_ip.addr(), server_address.prefix_len()).ok();
+                    }
+                }
 
-        Ok(Interface {
+                None
+            })
+            .collect();
+
+        if assigned_ips.is_empty() {
+            return Err(WireguardError::NoAssignedIP);
+        }
+
+        let mut client_interface = Interface {
             endpoint: None,
 
-            address: assigned_ip,
+            address: assigned_ips.clone(),
             listen_port: None,
             private_key,
-            dns: interface.dns.clone(),
+            dns: server_interface.dns.clone(),
 
             table: None,
             mtu: None,
@@ -143,8 +198,30 @@ impl Peer {
             post_up: vec![],
             post_down: vec![],
 
-            peers: vec![interface.to_peer()],
-        })
+            peers: vec![server_interface.to_peer()],
+        };
+
+        if options.default_gateway {
+            client_interface.peers[0].allowed_ips = {
+                let mut allowed_ips = Vec::with_capacity(1);
+
+                if assigned_ips.iter().any(|ip| ip.addr().is_ipv4()) {
+                    allowed_ips.push(IpNet::new_assert(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 0));
+                }
+
+                if assigned_ips.iter().any(|ip| ip.addr().is_ipv6()) {
+                    allowed_ips.push(IpNet::new_assert(IpAddr::V6(Ipv6Addr::UNSPECIFIED), 0));
+                }
+
+                allowed_ips
+            };
+        }
+
+        if options.persistent_keepalive != 0 {
+            client_interface.peers[0].persistent_keepalive = options.persistent_keepalive;
+        }
+
+        Ok(client_interface)
     }
 }
 

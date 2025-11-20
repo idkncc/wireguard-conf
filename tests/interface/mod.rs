@@ -1,5 +1,8 @@
+use wireguard_conf::as_ipaddr;
 use wireguard_conf::as_ipnet;
 use wireguard_conf::prelude::*;
+
+mod to_string;
 
 #[test]
 fn empty_interface() {
@@ -10,7 +13,7 @@ fn empty_interface() {
     assert_eq!(
         interface,
         Interface {
-            address: as_ipnet!("0.0.0.0/0"),
+            address: vec![as_ipnet!("0.0.0.0/0")],
             listen_port: None,
             private_key,
             dns: vec![],
@@ -31,12 +34,46 @@ fn empty_interface() {
 }
 
 #[test]
-fn address() {
+fn address_ipv4() {
     let interface = InterfaceBuilder::new()
-        .address(as_ipnet!("1.2.3.4/16"))
+        .address([as_ipnet!("1.2.3.4/16")])
         .build();
 
-    assert_eq!(interface.address, as_ipnet!("1.2.3.4/16"));
+    assert_eq!(interface.address, vec![as_ipnet!("1.2.3.4/16")]);
+}
+#[test]
+fn address_ipv6() {
+    let interface = InterfaceBuilder::new()
+        .address([as_ipnet!("fd00::1/48")])
+        .build();
+
+    assert_eq!(interface.address, vec![as_ipnet!("fd00::1/48")]);
+}
+
+#[test]
+fn add_network() {
+    let interface = InterfaceBuilder::new()
+        .add_network(as_ipnet!("1.2.3.4/16"))
+        .add_network(as_ipnet!("fd00::1/48"))
+        .build();
+
+    assert_eq!(
+        interface.address,
+        vec![as_ipnet!("1.2.3.4/16"), as_ipnet!("fd00::1/48")]
+    );
+}
+
+#[test]
+fn add_address() {
+    let interface = InterfaceBuilder::new()
+        .add_address(as_ipaddr!("1.2.3.4"))
+        .add_address(as_ipaddr!("fd00::1"))
+        .build();
+
+    assert_eq!(
+        interface.address,
+        vec![as_ipnet!("1.2.3.4/32"), as_ipnet!("fd00::1/128")]
+    );
 }
 
 #[test]
