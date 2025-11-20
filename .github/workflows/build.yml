@@ -18,8 +18,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Lint (default features)
         run: cargo clippy 
-      - name: Lint (amneziawg)
-        run: cargo clippy --features "amneziawg"
+      - name: Lint (all features)
+        run: cargo clippy --all-features
+      - name: Lint (all targets & features)
+        run: cargo clippy --all-targets --all-features
 
   test:
     runs-on: ubuntu-latest
