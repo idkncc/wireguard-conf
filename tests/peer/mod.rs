@@ -3,6 +3,8 @@ use wireguard_conf::prelude::*;
 
 use either::Either;
 
+mod to_interface;
+
 #[test]
 fn empty_peer() {
     let peer = PeerBuilder::new().build();
@@ -35,7 +37,7 @@ fn endpoint() {
 
 #[test]
 fn allowed_ips() {
-    let allowed_ips = [as_ipnet!("10.0.0.1/24"), as_ipnet!("0.0.0.0/0")];
+    let allowed_ips = [as_ipnet!("1.2.3.4/16"), as_ipnet!("fd00::1/48")];
 
     let peer = PeerBuilder::new().allowed_ips(allowed_ips).build();
 
