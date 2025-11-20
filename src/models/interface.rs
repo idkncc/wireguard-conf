@@ -3,9 +3,9 @@ use either::Either;
 use ipnet::IpNet;
 use itertools::Itertools as _;
 
-use std::convert::Infallible;
 use std::fmt;
 use std::net::Ipv4Addr;
+use std::{convert::Infallible, net::IpAddr};
 
 #[cfg(feature = "serde")]
 #[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
@@ -103,7 +103,10 @@ impl<'de> Deserialize<'de> for Table {
 pub struct Interface {
     /// Interface's address.
     ///
-    /// - `/32` ipnets will be generated as regular ips (f.e. 1.2.3.4/32 -> 1.2.3.4)
+    /// `/32` and `/128` IP networks will be generated as regular ips (f.e. `1.2.3.4/32` -> `1.2.3.4`)
+    ///
+    /// You can also use [`InterfaceBuilder::add_network()`] to add a single network and
+    /// [`InterfaceBuilder::add_address()`] to add a single address.
     ///
     /// [Wireguard docs](https://github.com/pirate/wireguard-docs#address)
     #[builder(
@@ -250,10 +253,29 @@ impl InterfaceBuilder {
         Self::default()
     }
 
-    /// Adds single address.
+    /// Adds IP Network to `Address = ...` field.
     ///
-    /// `value` is `Into<IpNet>`, which means that it can be either [`ipnet::IpNet`] or [`std::net::IpAddr`].
-    pub fn add_address<T: Into<IpNet>>(&mut self, value: T) -> &mut Self {
+    /// `value` is [`Into<IpNet>`], which means that it can be either [`ipnet::IpNet`] or [`std::net::IpAddr`].
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use wireguard_conf::{as_ipnet, prelude::*};
+    ///
+    /// let interface = InterfaceBuilder::new()
+    ///     .add_network(as_ipnet!("1.2.3.4/16"))
+    ///     .add_network(as_ipnet!("fd00:DEAD:BEEF::1/48"))
+    ///     .build();
+    ///
+    /// assert_eq!(
+    ///     interface.address,
+    ///     vec![
+    ///         as_ipnet!("1.2.3.4/16"),
+    ///         as_ipnet!("fd00:DEAD:BEEF::1/48")
+    ///     ]
+    /// );
+    /// ```
+    pub fn add_network<T: Into<IpNet>>(&mut self, value: T) -> &mut Self {
         if self.address.is_none() {
             self.address = Some(Vec::with_capacity(1));
         }
@@ -262,6 +284,48 @@ impl InterfaceBuilder {
             .as_mut()
             .unwrap_or_else(|| unreachable!())
             .push(value.into());
+        self
+    }
+
+    /// Adds IP address to `Address = ...` field.
+    ///
+    /// `value` is [`Into<IpAddr>`], which means that it can be either [`std::net::Ipv4Addr`] or [`std::net::Ipv6Addr`].
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use wireguard_conf::{as_ipaddr, as_ipnet, prelude::*};
+    ///
+    /// let interface = InterfaceBuilder::new()
+    ///     .add_address(as_ipaddr!("1.2.3.4"))
+    ///     .add_address(as_ipaddr!("fd00::1"))
+    ///     .build();
+    ///
+    /// // /32 and /128 are added automatically
+    /// assert_eq!(
+    ///     interface.address,
+    ///     vec![
+    ///         as_ipnet!("1.2.3.4/32"),
+    ///         as_ipnet!("fd00::1/128"),
+    ///     ]
+    /// );
+    /// ```
+    pub fn add_address<T: Into<IpAddr>>(&mut self, value: T) -> &mut Self {
+        if self.address.is_none() {
+            self.address = Some(Vec::with_capacity(1));
+        }
+
+        let ip_addr = value.into();
+        let ip_net = if ip_addr.is_ipv4() {
+            IpNet::new_assert(ip_addr, 32) // 1.2.3.4/32
+        } else {
+            IpNet::new_assert(ip_addr, 128) // fd00::1/128
+        };
+
+        self.address
+            .as_mut()
+            .unwrap_or_else(|| unreachable!())
+            .push(ip_net);
         self
     }
 
