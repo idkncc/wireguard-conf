@@ -13,7 +13,7 @@ fn ipv6_and_multiple_addresses() {
     server_interface.peers.push(client.clone());
 
     let client_interface = client
-        .to_interface(&server_interface)
+        .to_interface(&server_interface, ToInterfaceOptions::new())
         .expect("failed to create client interface");
 
     let server_privkey = server_interface.private_key.clone();

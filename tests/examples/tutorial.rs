@@ -56,12 +56,16 @@ fn all_fields() {
     // cool shortcut: `.to_interface()`:
     //  it constructs peer's interface from Peer and server's interface.
     //  technically, `Peer` is just a config section, mean while `Interface` is a full config.
-    let mut peer1_interface = peer1
-        .to_interface(&server_interface)
+    //
+    // `ToInterfaceOptions`
+    let peer1_interface = peer1
+        .to_interface(
+            &server_interface,
+            ToInterfaceOptions::new()
+                .default_gateway(true) // Sets `AllowedIPs = 0.0.0.0/0` (see line 111)
+                .persistent_keepalive(25), // Sets `PersistentKeepalive = 25` (see line 113)
+        )
         .expect("failed to get interface from peer1");
-
-    // modify peer's full config to add PersistentKeepalive
-    peer1_interface.peers[0].persistent_keepalive = 25;
 
     let server_conf = server_interface.to_string();
     let peer1_conf = peer1_interface.to_string();
@@ -104,7 +108,7 @@ fn all_fields() {
             
             [Peer]
             Endpoint = network.office.com
-            AllowedIPs = 10.0.0.1/24
+            AllowedIPs = 0.0.0.0/0
             PublicKey = {server_public_key}
             PersistentKeepalive = 25
             

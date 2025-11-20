@@ -14,7 +14,7 @@
 //!
 //! # Example
 //!
-//! ```
+//! ```rust
 //! use wireguard_conf::prelude::*;
 //! use wireguard_conf::as_ipnet;
 //!
@@ -33,7 +33,7 @@
 //! println!("{}\n", interface);
 //!
 //! println!("Client's config:");
-//! println!("{}", peer.to_interface(&interface).unwrap());
+//! println!("{}", peer.to_interface(&interface, ToInterfaceOptions::new()).unwrap());
 //! ```
 
 #![warn(clippy::pedantic)]
