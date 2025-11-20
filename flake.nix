@@ -34,6 +34,8 @@
                 "rust-analyzer"
               ];
             })
+
+            just
           ];
         };
       }

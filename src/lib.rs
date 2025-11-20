@@ -47,5 +47,7 @@ mod utils;
 
 pub mod prelude;
 
+pub use ipnet;
+
 pub use models::*;
 pub use utils::*;
