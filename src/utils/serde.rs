@@ -1,5 +1,4 @@
 use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
-use std::fmt;
 
 use super::{PresharedKey, PrivateKey, PublicKey};
 
@@ -8,7 +7,11 @@ impl Serialize for PrivateKey {
     where
         S: Serializer,
     {
-        serializer.serialize_str(&self.to_string())
+        if serializer.is_human_readable() {
+            serializer.serialize_str(&self.to_string())
+        } else {
+            serializer.serialize_bytes(self.as_bytes())
+        }
     }
 }
 
@@ -17,25 +20,16 @@ impl<'de> Deserialize<'de> for PrivateKey {
     where
         D: Deserializer<'de>,
     {
-        struct PrivateKeyVisitor;
+        if deserializer.is_human_readable() {
+            let data = String::deserialize(deserializer)?;
 
-        impl de::Visitor<'_> for PrivateKeyVisitor {
-            type Value = PrivateKey;
+            PrivateKey::try_from(data.as_str())
+                .map_err(|_| de::Error::invalid_value(de::Unexpected::Str(&data), &"a private key"))
+        } else {
+            let bytes = <[u8; 32]>::deserialize(deserializer)?;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                formatter.write_str("an private key")
-            }
-
-            fn visit_str<E>(self, s: &str) -> Result<Self::Value, E>
-            where
-                E: de::Error,
-            {
-                PrivateKey::try_from(s)
-                    .map_err(|_| de::Error::invalid_value(de::Unexpected::Str(s), &self))
-            }
+            Ok(PrivateKey::from(bytes))
         }
-
-        deserializer.deserialize_str(PrivateKeyVisitor)
     }
 }
 
@@ -44,7 +38,11 @@ impl Serialize for PublicKey {
     where
         S: Serializer,
     {
-        serializer.serialize_str(&self.to_string())
+        if serializer.is_human_readable() {
+            serializer.serialize_str(&self.to_string())
+        } else {
+            serializer.serialize_bytes(self.as_bytes())
+        }
     }
 }
 
@@ -53,25 +51,16 @@ impl<'de> Deserialize<'de> for PublicKey {
     where
         D: Deserializer<'de>,
     {
-        struct PublicKeyVisitor;
+        if deserializer.is_human_readable() {
+            let data = String::deserialize(deserializer)?;
 
-        impl de::Visitor<'_> for PublicKeyVisitor {
-            type Value = PublicKey;
+            PublicKey::try_from(data.as_str())
+                .map_err(|_| de::Error::invalid_value(de::Unexpected::Str(&data), &"a public key"))
+        } else {
+            let bytes = <[u8; 32]>::deserialize(deserializer)?;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                formatter.write_str("an public key")
-            }
-
-            fn visit_str<E>(self, s: &str) -> Result<Self::Value, E>
-            where
-                E: de::Error,
-            {
-                PublicKey::try_from(s)
-                    .map_err(|_| de::Error::invalid_value(de::Unexpected::Str(s), &self))
-            }
+            Ok(PublicKey::from(bytes))
         }
-
-        deserializer.deserialize_str(PublicKeyVisitor)
     }
 }
 
@@ -80,7 +69,11 @@ impl Serialize for PresharedKey {
     where
         S: Serializer,
     {
-        serializer.serialize_str(&self.to_string())
+        if serializer.is_human_readable() {
+            serializer.serialize_str(&self.to_string())
+        } else {
+            serializer.serialize_bytes(self.as_bytes())
+        }
     }
 }
 
@@ -89,24 +82,16 @@ impl<'de> Deserialize<'de> for PresharedKey {
     where
         D: Deserializer<'de>,
     {
-        struct PresharedKeyVisitor;
+        if deserializer.is_human_readable() {
+            let data = String::deserialize(deserializer)?;
 
-        impl de::Visitor<'_> for PresharedKeyVisitor {
-            type Value = PresharedKey;
+            PresharedKey::try_from(data.as_str()).map_err(|_| {
+                de::Error::invalid_value(de::Unexpected::Str(&data), &"a preshared key")
+            })
+        } else {
+            let bytes = <[u8; 32]>::deserialize(deserializer)?;
 
-            fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                formatter.write_str("an preshared key")
-            }
-
-            fn visit_str<E>(self, s: &str) -> Result<Self::Value, E>
-            where
-                E: de::Error,
-            {
-                PresharedKey::try_from(s)
-                    .map_err(|_| de::Error::invalid_value(de::Unexpected::Str(s), &self))
-            }
+            Ok(PresharedKey::from(bytes))
         }
-
-        deserializer.deserialize_str(PresharedKeyVisitor)
     }
 }

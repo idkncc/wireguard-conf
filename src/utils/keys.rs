@@ -106,6 +106,12 @@ impl TryFrom<String> for PrivateKey {
     }
 }
 
+impl From<[u8; 32]> for PrivateKey {
+    fn from(value: [u8; 32]) -> Self {
+        Self(StaticSecret::from(value))
+    }
+}
+
 /// Public key.
 ///
 /// Wrapper around [`x25519_dalek::PublicKey`] with some traits.
@@ -191,6 +197,12 @@ impl TryFrom<String> for PublicKey {
     }
 }
 
+impl From<[u8; 32]> for PublicKey {
+    fn from(value: [u8; 32]) -> Self {
+        Self(XPublicKey::from(value))
+    }
+}
+
 impl From<&PrivateKey> for PublicKey {
     fn from(value: &PrivateKey) -> Self {
         Self(XPublicKey::from(&value.0))
@@ -267,6 +279,12 @@ impl fmt::Debug for PresharedKey {
 impl fmt::Display for PresharedKey {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", BASE64_STANDARD.encode(self.as_bytes()))
+    }
+}
+
+impl From<[u8; 32]> for PresharedKey {
+    fn from(value: [u8; 32]) -> Self {
+        Self(value)
     }
 }
 

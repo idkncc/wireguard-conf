@@ -35,11 +35,17 @@ pub fn private_key() {
 #[test]
 pub fn private_key_serde() {
     let private_key = PrivateKey::random();
-    let serializer = Serializer::builder().build();
 
+    let serializer = Serializer::builder().build();
     assert_ok_eq!(
         private_key.serialize(&serializer),
         [Token::Str(private_key.to_string())]
+    );
+
+    let serializer = Serializer::builder().is_human_readable(false).build();
+    assert_ok_eq!(
+        private_key.serialize(&serializer),
+        [Token::Bytes(private_key.as_bytes().to_vec())]
     );
 }
 
@@ -64,11 +70,17 @@ pub fn public_key() {
 pub fn public_key_serde() {
     let private_key = PrivateKey::random();
     let public_key = PublicKey::from(&private_key);
-    let serializer = Serializer::builder().build();
 
+    let serializer = Serializer::builder().is_human_readable(true).build();
     assert_ok_eq!(
         public_key.serialize(&serializer),
         [Token::Str(public_key.to_string())]
+    );
+
+    let serializer = Serializer::builder().is_human_readable(false).build();
+    assert_ok_eq!(
+        public_key.serialize(&serializer),
+        [Token::Bytes(public_key.as_bytes().to_vec())]
     );
 }
 
@@ -91,10 +103,16 @@ pub fn preshared_key() {
 #[test]
 pub fn preshared_key_serde() {
     let preshared_key = PresharedKey::random();
-    let serializer = Serializer::builder().build();
 
+    let serializer = Serializer::builder().build();
     assert_ok_eq!(
         preshared_key.serialize(&serializer),
         [Token::Str(preshared_key.to_string())]
+    );
+
+    let serializer = Serializer::builder().is_human_readable(false).build();
+    assert_ok_eq!(
+        preshared_key.serialize(&serializer),
+        [Token::Bytes(preshared_key.as_bytes().to_vec())]
     );
 }
