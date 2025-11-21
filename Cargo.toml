@@ -1,7 +1,7 @@
 [package]
 name = "wireguard-conf"
-description = "Construct Wireguard's interface and peer configs"
-keywords = ["wireguard", "amnezia", "builder"]
+description = "Generate Wireguard configs and interfaces with code"
+keywords = ["wireguard", "amneziawg", "builder", "config"]
 
 version = "0.4.0"
 edition = "2021"
@@ -18,23 +18,29 @@ amneziawg = []
 serde = ["dep:serde", "either/serde", "ipnet/serde"]
 
 [dependencies]
-base64 = "0.22.1"
-either = "1.13.0"
-ipnet = "2.11.0"
-thiserror = "2.0.11"
-x25519-dalek = { version = "2.0.1", features = ["static_secrets", "getrandom"] }
-zeroize = { version = "1.8.1", features = ["zeroize_derive"] }
+ipnet = "2"
 
-rand = { version = "0.9.0", features = ["small_rng"] }
-derive_builder = "0.20.2"
+# keys
+x25519-dalek = { version = "2.0", features = ["static_secrets", "getrandom"] }
+zeroize = { version = "1.8", features = ["zeroize_derive"] }
+base64 = "0.22"
+rand = { version = "0.9", features = ["small_rng"] }
 
-serde = { version = "1.0.228", features = ["derive"], optional = true }
-itertools = "0.14.0"
+# other
+thiserror = "2.0"
+either = "1"
+
+# internal helpers
+derive_builder = "0.20"
+itertools = "0.14"
+
+# serde feature
+serde = { version = "1", features = ["derive"], optional = true }
 
 [dev-dependencies]
-claims = "0.8.0"
+serde_assert = "0.8"
+claims = "0.8"
 indoc = "2"
-serde_assert = "0.8.0"
 
 # Doc all features
 [package.metadata.docs.rs]
