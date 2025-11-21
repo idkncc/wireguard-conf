@@ -26,11 +26,11 @@ More usage examples you can find in [tests/tutorial.rs](tests/tutorial.rs), [tes
 use wireguard_conf::prelude::*;
 use wireguard_conf::as_ipnet;
 
-let peer = PeerBuilder::new()
+let peer = Peer::builder()
     .allowed_ips([as_ipnet!("10.0.0.2/24")])
     .build();
 
-let interface = InterfaceBuilder::new()
+let interface = Interface::builder()
     .address([as_ipnet!("10.0.0.1/24")])
     .peers([peer.clone()])
     .build();

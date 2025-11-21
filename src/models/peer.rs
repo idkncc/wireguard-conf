@@ -101,8 +101,26 @@ pub struct Peer {
     pub amnezia_settings: Option<AmneziaSettings>,
 }
 
+impl Peer {
+    /// Create new `PeerBuilder`. Alias for `PeerBuilder::new()`.
+    ///
+    /// ```rust
+    /// # use wireguard_conf::prelude::*;
+    /// # use wireguard_conf::as_ipnet;
+    /// #
+    /// let interface = Peer::builder()
+    ///     .allowed_ips([as_ipnet!("0.0.0.0/0")])
+    ///     // <snip>
+    ///     .build();
+    /// ```
+    #[must_use]
+    pub fn builder() -> PeerBuilder {
+        PeerBuilder::default()
+    }
+}
+
 impl PeerBuilder {
-    /// Create new `InterfaceBuilder`.
+    /// Create new `PeerBuilder`.
     ///
     /// ```rust
     /// # use wireguard_conf::prelude::*;

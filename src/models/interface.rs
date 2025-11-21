@@ -236,6 +236,24 @@ impl Interface {
     }
 }
 
+impl Interface {
+    /// Create new `InterfaceBuilder`. Alias for `InterfaceBuilder::new()`.
+    ///
+    /// ```rust
+    /// # use wireguard_conf::prelude::*;
+    /// # use wireguard_conf::as_ipnet;
+    /// #
+    /// let interface = Interface::builder()
+    ///     .address([as_ipnet!("10.0.0.1/24")])
+    ///     // <snip>
+    ///     .build();
+    /// ```
+    #[must_use]
+    pub fn builder() -> InterfaceBuilder {
+        InterfaceBuilder::default()
+    }
+}
+
 impl InterfaceBuilder {
     /// Create new `InterfaceBuilder`.
     ///
