@@ -12,6 +12,8 @@ cargo add wireguard-conf
 
 ### Usage
 
+The best way to understand library: [Quickstart](./QUICKSTART.md)!
+
 More usage examples you can find in [tests/tutorial.rs](tests/tutorial.rs), [tests folder](tests/) and documentation examples on [docs.rs](https://docs.rs/wireguard-conf).
 
 ```rust
