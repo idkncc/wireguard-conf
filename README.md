@@ -1,5 +1,11 @@
 # Wireguard Conf
 
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/idkncc/wireguard-conf/build.yml)
+![docs.rs](https://img.shields.io/docsrs/wireguard-conf)
+![Crates.io Version](https://img.shields.io/crates/v/wireguard-conf)
+![Crates.io Total Downloads](https://img.shields.io/crates/d/wireguard-conf)
+[![Quickstart Tutorial](https://img.shields.io/badge/Quickstart_Tutorial-blue)](./QUICKSTART.md)
+
 Easy to use library for creating wireguard configs.
 
 ## Installation
