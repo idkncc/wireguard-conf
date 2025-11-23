@@ -101,7 +101,7 @@ fn tutorial() {
             DNS = 1.1.1.1,1.0.0.1
             
             [Peer]
-            Endpoint = network.office.com
+            Endpoint = network.office.com:51820
             AllowedIPs = 0.0.0.0/0
             PublicKey = {server_public_key}
             PersistentKeepalive = 25

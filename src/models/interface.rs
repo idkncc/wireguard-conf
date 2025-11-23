@@ -224,7 +224,12 @@ impl Interface {
     /// ```
     pub fn to_peer(&self) -> Peer {
         Peer {
-            endpoint: self.endpoint.clone(),
+            endpoint: self.endpoint.as_ref().map(|server_endpoint| {
+                format!(
+                    "{server_endpoint}:{server_port}",
+                    server_port = self.listen_port.unwrap_or(51820)
+                )
+            }),
             allowed_ips: self.address.clone(),
             key: Either::Left(self.private_key.clone()),
             preshared_key: None,

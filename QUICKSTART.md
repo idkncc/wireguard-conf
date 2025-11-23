@@ -287,7 +287,7 @@ PrivateKey = M4WOJmmjt9aWR0jcvnyZzZXSwzWaZLeRixgxhHUj5CI=
 DNS = 1.1.1.1,1.0.0.1
 
 [Peer]
-Endpoint = network.office.com
+Endpoint = network.office.com:51820
 AllowedIPs = 0.0.0.0/0
 PublicKey = khsgcz3SXuc2PyIIupPZ4YjmRJMAHPoLHNEhK6RA1U8=
 PersistentKeepalive = 25
