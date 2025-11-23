@@ -229,9 +229,6 @@ impl Interface {
             key: Either::Left(self.private_key.clone()),
             preshared_key: None,
             persistent_keepalive: 0,
-
-            #[cfg(feature = "amneziawg")]
-            amnezia_settings: self.amnezia_settings.clone(),
         }
     }
 }

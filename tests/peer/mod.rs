@@ -19,9 +19,6 @@ fn empty_peer() {
             persistent_keepalive: 0,
             key,
             preshared_key: None,
-
-            #[cfg(feature = "amneziawg")]
-            amnezia_settings: None
         }
     );
 }
@@ -74,16 +71,4 @@ fn preshared_key() {
         .build();
 
     assert_eq!(peer.preshared_key, Some(preshared_key));
-}
-
-#[cfg(feature = "amneziawg")]
-#[test]
-fn amnezia_settings() {
-    let amnezia_settings = AmneziaSettings::random();
-
-    let peer = PeerBuilder::new()
-        .amnezia_settings(amnezia_settings.clone())
-        .build();
-
-    assert_eq!(peer.amnezia_settings, Some(amnezia_settings));
 }

@@ -91,14 +91,6 @@ pub struct Peer {
     /// Peer's preshared-key.
     #[builder(setter(strip_option), default)]
     pub preshared_key: Option<PresharedKey>,
-
-    /// AmneziaWG settings.
-    ///
-    /// Used for packet obfuscation.
-    #[cfg(feature = "amneziawg")]
-    #[cfg_attr(docsrs, doc(cfg(feature = "amneziawg")))]
-    #[builder(setter(strip_option), default)]
-    pub amnezia_settings: Option<AmneziaSettings>,
 }
 
 impl Peer {
@@ -209,7 +201,7 @@ impl Peer {
             mtu: None,
 
             #[cfg(feature = "amneziawg")]
-            amnezia_settings: self.amnezia_settings.clone(),
+            amnezia_settings: server_interface.amnezia_settings.clone(),
 
             pre_up: vec![],
             pre_down: vec![],
