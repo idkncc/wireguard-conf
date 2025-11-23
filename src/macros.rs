@@ -16,7 +16,7 @@
 #[macro_export]
 macro_rules! as_ipnet {
     ($x:expr) => {
-        $x.parse::<::ipnet::IpNet>().unwrap()
+        $x.parse::<$crate::ipnet::IpNet>().unwrap()
     };
 }
 
