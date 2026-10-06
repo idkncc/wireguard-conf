@@ -3,7 +3,7 @@ name = "wireguard-conf"
 description = "Generate Wireguard configs and interfaces with code"
 keywords = ["wireguard", "amneziawg", "builder", "config"]
 
-version = "2.0.0"
+version = "2.0.1"
 edition = "2024"
 
 rust-version = "1.88"
@@ -13,7 +13,14 @@ readme = "README.md"
 homepage = "https://github.com/idkncc/wireguard-conf"
 repository = "https://github.com/idkncc/wireguard-conf"
 
-exclude = ["tests/", ".github/", "CONTRIBUTING.md", "QUICKSTART.md", "CHANGELOG.md", ".gitignore"]
+exclude = [
+  "tests/",
+  ".github/",
+  "CONTRIBUTING.md",
+  "QUICKSTART.md",
+  "CHANGELOG.md",
+  ".gitignore",
+]
 
 [features]
 amneziawg = []
@@ -24,9 +31,9 @@ ipnet = "2.12"
 
 # keys
 x25519-dalek = { version = "3.0", features = ["static_secrets", "getrandom"] }
-zeroize = { version = "1.8", features = ["zeroize_derive"] }
-base64 = "0.22"
-rand = { version = "0.10" }
+zeroize = { version = "1.9", features = ["zeroize_derive"] }
+base64 = "0.23"
+rand = "0.10"
 
 # other
 thiserror = "2.0"
