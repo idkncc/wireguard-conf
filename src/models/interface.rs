@@ -62,7 +62,7 @@ impl<'de> Deserialize<'de> for Table {
             type Value = Table;
 
             fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-                formatter.write_str("an routing table value (number, off or auto)")
+                formatter.write_str("a routing table value (number, off or auto)")
             }
 
             fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
@@ -252,6 +252,9 @@ impl Interface {
             allowed_ips: self.address.clone(),
             key: Either::Left(self.private_key.clone()),
             preshared_key: None,
+            #[cfg(feature = "amneziawg-3")]
+            persistent_keepalive: UintRange::default(),
+            #[cfg(not(feature = "amneziawg-3"))]
             persistent_keepalive: 0,
         }
     }
@@ -272,6 +275,40 @@ impl Interface {
     #[must_use]
     pub fn builder() -> InterfaceBuilder {
         InterfaceBuilder::default()
+    }
+
+    /// Removes AmneziaWG settings that are not required for the server.
+    ///
+    /// This is intended for generating server configuration, where
+    /// some fields designed to confuse DPI may not be included (e.g., I1-I5).
+    ///
+    /// Returns a copy of the interface with client-only settings removed, so the
+    /// interface itself is left intact and a single one can be exported both as
+    /// is and stripped, right before each output.
+    ///
+    /// ```
+    /// # use wireguard_conf::prelude::*;
+    /// # use wireguard_conf::as_ipnet;
+    /// let interface = InterfaceBuilder::new()
+    ///     .address([as_ipnet!("10.0.0.1/24")])
+    ///     .amnezia_settings(AmneziaWG::random_v3())
+    ///     .build();
+    ///
+    /// // the full config, with the client-only settings
+    /// let full_conf = interface.to_string();
+    /// // the config for the server
+    /// let server_conf = interface.strip_client_data().to_string();
+    ///
+    /// assert!(full_conf.contains("Jc = "));
+    /// assert!(!server_conf.contains("Jc = "));
+    /// ```
+    #[cfg(feature = "amneziawg")]
+    pub fn strip_client_data(&self) -> Self {
+        let mut stripped = self.clone();
+        if let Some(ref mut settings) = stripped.amnezia_settings {
+            settings.strip_client_data();
+        }
+        stripped
     }
 }
 

@@ -110,25 +110,22 @@ impl AmneziaWG1 {
     pub fn validate(&self) -> WireguardResult<()> {
         assert_return!(
             1 <= self.jc && self.jc <= 128,
-            WireguardError::InvalidAmneziaSetting("Jc".to_string())
+            WireguardError::InvalidAmneziaSetting("Jc")
         );
 
         assert_return!(
             self.jmin < self.jmax,
-            WireguardError::InvalidAmneziaSetting("Jmin".to_string())
+            WireguardError::InvalidAmneziaSetting("Jmin")
         );
         assert_return!(
             self.jmax <= 1280,
-            WireguardError::InvalidAmneziaSetting("Jmax".to_string())
+            WireguardError::InvalidAmneziaSetting("Jmax")
         );
         assert_return!(
             self.s1 < 1280 && self.s1 + 56 != self.s2,
-            WireguardError::InvalidAmneziaSetting("S1".to_string())
+            WireguardError::InvalidAmneziaSetting("S1")
         );
-        assert_return!(
-            self.s2 < 1280,
-            WireguardError::InvalidAmneziaSetting("S2".to_string())
-        );
+        assert_return!(self.s2 < 1280, WireguardError::InvalidAmneziaSetting("S2"));
 
         let are_h_values_unique = {
             let set = HashSet::from([self.h1, self.h2, self.h3, self.h4]);
@@ -137,7 +134,7 @@ impl AmneziaWG1 {
         };
         assert_return!(
             are_h_values_unique,
-            WireguardError::InvalidAmneziaSetting("H1/H2/H3/H4".to_string())
+            WireguardError::InvalidAmneziaSetting("H1/H2/H3/H4")
         );
 
         Ok(())

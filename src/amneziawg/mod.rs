@@ -1,10 +1,10 @@
+mod range;
 mod ver1;
 mod ver2;
 
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
 use std::fmt;
 
+pub use range::{HeaderRange, UintRange};
 pub use ver1::*;
 pub use ver2::*;
 
@@ -26,15 +26,26 @@ use crate::WireguardResult;
 ///
 /// println!("{settings}");
 /// ```
+///
+/// **Note**
+///
+/// A variant matches even when it recognized nothing, because all of its settings are
+/// `Option` and unknown fields are ignored. So a typo in a setting name is silently
+/// dropped instead of failing, and an object with no known settings at all is read as
+/// an empty config rather than as an error.
 #[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-#[cfg_attr(feature = "serde", serde(untagged))]
+#[cfg_attr(
+    feature = "serde",
+    derive(serde::Deserialize, serde::Serialize),
+    serde(untagged)
+)]
 pub enum AmneziaWG {
-    /// AmneziaWG 1.0
-    V1(AmneziaWG1),
 
     /// AmneziaWG 2.0
     V2(AmneziaWG2),
+
+    /// AmneziaWG 1.0
+    V1(AmneziaWG1),
 }
 
 impl AmneziaWG {
@@ -114,14 +125,14 @@ impl AmneziaWG {
         }
     }
 
-    /// Removes server-only AmneziaWG settings.
+    /// Removes AmneziaWG settings that are not required for the server.
     ///
-    /// This is intended for generating client configuration files, where
-    /// server-specific fields (such as I1-I5) must not be included.
-    pub fn strip_server_data(&mut self) {
+    /// This is intended for generating server configuration, where
+    /// some fields designed to confuse DPI may not be included (e.g., I1-I5).
+    pub fn strip_client_data(&mut self) {
         match self {
             AmneziaWG::V1(_) => {}
-            AmneziaWG::V2(settings) => settings.strip_server_data(),
+            AmneziaWG::V2(settings) => settings.strip_client_data(),
         }
     }
 }

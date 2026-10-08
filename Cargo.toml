@@ -3,7 +3,7 @@ name = "wireguard-conf"
 description = "Generate Wireguard configs and interfaces with code"
 keywords = ["wireguard", "amneziawg", "builder", "config"]
 
-version = "2.0.1"
+version = "2.0.2"
 edition = "2024"
 
 rust-version = "1.88"
@@ -24,6 +24,7 @@ exclude = [
 
 [features]
 amneziawg = []
+amneziawg-3 = ["amneziawg"]
 serde = ["dep:serde", "either/serde", "ipnet/serde"]
 
 [dependencies]

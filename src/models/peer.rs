@@ -20,11 +20,10 @@ pub struct ToInterfaceOptions {
     default_gateway: bool,
 
     /// Option, for setting persistent keepalive to client's peer.
+    #[cfg(feature = "amneziawg-3")]
+    persistent_keepalive: UintRange,
+    #[cfg(not(feature = "amneziawg-3"))]
     persistent_keepalive: u16,
-
-    /// Option for removing server-only AmneziaWG fields from the generated interface.
-    #[cfg(feature = "amneziawg")]
-    strip_server_data: bool,
 }
 
 impl ToInterfaceOptions {
@@ -44,18 +43,18 @@ impl ToInterfaceOptions {
     }
 
     /// Sets persistent keepalive to client's peer.
-    ///
     #[must_use]
-    pub fn persistent_keepalive(mut self, value: u16) -> Self {
-        self.persistent_keepalive = value;
+    #[cfg(feature = "amneziawg-3")]
+    pub fn persistent_keepalive(mut self, value: impl Into<UintRange>) -> Self {
+        self.persistent_keepalive = value.into();
         self
     }
 
-    /// Removes server-only AmneziaWG settings from the generated interface.
+    /// Sets persistent keepalive to client's peer.
     #[must_use]
-    #[cfg(feature = "amneziawg")]
-    pub fn strip_server_data(mut self, value: bool) -> Self {
-        self.strip_server_data = value;
+    #[cfg(not(feature = "amneziawg-3"))]
+    pub fn persistent_keepalive(mut self, value: u16) -> Self {
+        self.persistent_keepalive = value;
         self
     }
 }
@@ -76,7 +75,9 @@ pub struct Peer {
 
     /// Peer's allowed IPs.
     ///
-    /// - */32 and */128 ipnets will be generated as regular ips (f.e. 1.2.3.4/32 -> 1.2.3.4)
+    /// IP networks with host bits are exported as network addresses
+    /// (f.e. `1.2.3.4/24` is exported as `1.2.3.0/24`), so `wg-quick` doesn't fail
+    /// with `AllowedIP has nonzero host part`.
     ///
     /// [Wireguard Docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#allowedips)
     #[builder(setter(into), default)]
@@ -87,9 +88,25 @@ pub struct Peer {
     /// Represents in seconds how often to send an authenticated empty packet to the peer, for the
     /// purpose of keeping a stateful firewall or NAT mapping valid persistently.
     ///
+    /// With `amneziawg` feature it accepts a range (`20-30`), so the interval is
+    /// picked randomly on every handshake. Ranges require AmneziaWG 3.1, while a
+    /// single value is exported as a plain number, so it stays valid for
+    /// the vanilla WireGuard. A zero range (`0-0`), like a plain `0`, is not
+    /// exported at all.
+    ///
+    /// [Wireguard docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#persistentkeepalive)
+    #[cfg(feature = "amneziawg-3")]
+    #[builder(try_setter, setter(into), default)]
+    pub persistent_keepalive: UintRange,
+    /// Peer's persistent keepalive.
+    ///
+    /// Represents in seconds how often to send an authenticated empty packet to the peer, for the
+    /// purpose of keeping a stateful firewall or NAT mapping valid persistently.
+    ///
     /// Setting this value to `0` omits it in config.
     ///
     /// [Wireguard docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#persistentkeepalive)
+    #[cfg(not(feature = "amneziawg-3"))]
     #[builder(default)]
     pub persistent_keepalive: u16,
 
@@ -239,15 +256,14 @@ impl Peer {
             };
         }
 
-        if options.persistent_keepalive != 0 {
+        #[cfg(feature = "amneziawg-3")]
+        if !options.persistent_keepalive.is_zero() {
             client_interface.peers[0].persistent_keepalive = options.persistent_keepalive;
         }
 
-        #[cfg(feature = "amneziawg")]
-        if options.strip_server_data
-            && let Some(settings) = &mut client_interface.amnezia_settings
-        {
-            settings.strip_server_data();
+        #[cfg(not(feature = "amneziawg-3"))]
+        if options.persistent_keepalive != 0 {
+            client_interface.peers[0].persistent_keepalive = options.persistent_keepalive;
         }
 
         Ok(client_interface)
@@ -271,7 +287,7 @@ impl fmt::Display for Peer {
             "AllowedIPs = {}",
             self.allowed_ips
                 .iter()
-                .map(std::string::ToString::to_string)
+                .map(|a| IpNet::new_assert(a.network(), a.prefix_len()).to_string())
                 .collect::<Vec<String>>()
                 .join(",")
         )?;
@@ -283,6 +299,12 @@ impl fmt::Display for Peer {
         if let Some(preshared_key) = &self.preshared_key {
             writeln!(f, "PresharedKey = {preshared_key}")?;
         }
+        #[cfg(feature = "amneziawg-3")]
+        if !self.persistent_keepalive.is_zero() {
+            writeln!(f, "PersistentKeepalive = {}", self.persistent_keepalive)?;
+        }
+
+        #[cfg(not(feature = "amneziawg-3"))]
         if self.persistent_keepalive != 0 {
             writeln!(f, "PersistentKeepalive = {}", self.persistent_keepalive)?;
         }
