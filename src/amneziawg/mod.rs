@@ -1,12 +1,16 @@
 mod range;
 mod ver1;
 mod ver2;
+#[cfg(feature = "amneziawg-3")]
+mod ver3;
 
 use std::fmt;
 
 pub use range::{HeaderRange, UintRange};
 pub use ver1::*;
 pub use ver2::*;
+#[cfg(feature = "amneziawg-3")]
+pub use ver3::*;
 
 #[allow(unused_imports)]
 use crate::WireguardError;
@@ -19,6 +23,7 @@ use crate::WireguardResult;
 /// # use wireguard_conf::prelude::*;
 /// let settings = AmneziaWG::random_v1();
 /// let settings = AmneziaWG::random_v2();
+/// let settings = AmneziaWG::random_v3();
 ///
 /// assert_eq!(settings.validate(), Ok(()));
 ///
@@ -26,6 +31,22 @@ use crate::WireguardResult;
 ///
 /// println!("{settings}");
 /// ```
+///
+/// # Deserialization
+///
+/// [`AmneziaWG`] is `#[serde(untagged)]`, so there is no version tag in the format
+/// and the variant is picked by trying the variants in order, from the newest to the
+/// oldest: `V3`, then `V2`, then `V1`, and an error if none of them matches. In other
+/// words, a config is read as the newest AmneziaWG version it is valid for:
+///
+/// - a **AmneziaWG 3.1** config is read as `V3`;
+/// - a **AmneziaWG 2.0** config is read as `V3` too, because every `V2` setting has the
+///   same name and type in `V3`. The exported config doesn't change, only the variant
+///   does;
+/// - **AmneziaWG 1.0** is the only version, that is recognized by its own settings:
+///   it has all 9 of them required and writes `H1`-`H4` as numbers, while `V2` and `V3`
+///   write them as strings;
+/// - an empty object is read as `V3` with everything unset.
 ///
 /// **Note**
 ///
@@ -40,6 +61,9 @@ use crate::WireguardResult;
     serde(untagged)
 )]
 pub enum AmneziaWG {
+    #[cfg(feature = "amneziawg-3")]
+    /// AmneziaWG 3.1
+    V3(AmneziaWG3),
 
     /// AmneziaWG 2.0
     V2(AmneziaWG2),
@@ -105,6 +129,45 @@ impl AmneziaWG {
         AmneziaWG2::builder()
     }
 
+    #[cfg(feature = "amneziawg-3")]
+    /// Generate random recommended settings for **AmneziaWG 3.1**.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use wireguard_conf::prelude::*;
+    ///
+    /// let settings = AmneziaWG::random_v3();
+    ///
+    /// _ = InterfaceBuilder::new()
+    ///    // <snip>
+    ///    .amnezia_settings(settings)
+    ///    .build();
+    /// ```
+    #[inline]
+    #[must_use]
+    pub fn random_v3() -> Self {
+        AmneziaWG3::random()
+    }
+
+    #[cfg(feature = "amneziawg-3")]
+    /// Alias for `AmneziaWG::builder_v3().build()`
+    #[inline]
+    #[must_use]
+    pub fn empty_v3() -> Self {
+        Self::V3(AmneziaWG3::default())
+    }
+
+    #[cfg(feature = "amneziawg-3")]
+    /// Create new [`AmneziaWG3Builder`].
+    ///
+    /// This function is an alias for [`AmneziaWG3::builder()`].
+    #[inline]
+    #[must_use]
+    pub fn builder_v3() -> AmneziaWG3Builder {
+        AmneziaWG3::builder()
+    }
+
     /// Validates [`AmneziaWG`] values.
     ///
     /// ```
@@ -122,6 +185,8 @@ impl AmneziaWG {
         match self {
             AmneziaWG::V1(settings) => settings.validate(),
             AmneziaWG::V2(settings) => settings.validate(),
+            #[cfg(feature = "amneziawg-3")]
+            AmneziaWG::V3(settings) => settings.validate(),
         }
     }
 
@@ -133,6 +198,8 @@ impl AmneziaWG {
         match self {
             AmneziaWG::V1(_) => {}
             AmneziaWG::V2(settings) => settings.strip_client_data(),
+            #[cfg(feature = "amneziawg-3")]
+            AmneziaWG::V3(settings) => settings.strip_client_data(),
         }
     }
 }
@@ -149,6 +216,8 @@ impl fmt::Display for AmneziaWG {
         match self {
             AmneziaWG::V1(settings) => settings.fmt(f),
             AmneziaWG::V2(settings) => settings.fmt(f),
+            #[cfg(feature = "amneziawg-3")]
+            AmneziaWG::V3(settings) => settings.fmt(f),
         }
     }
 }
