@@ -1,16 +1,13 @@
 //! Module for AmneziaWG 3.1
 
+use super::{AmneziaWG, HeaderRange, UintRange};
+use crate::{HeaderProtectionKey, WireguardError, WireguardResult};
 use derive_builder::Builder;
 use rand::prelude::*;
 use std::{convert::Infallible, fmt};
 
 #[cfg(feature = "serde")]
-#[cfg_attr(docsrs, doc(cfg(feature = "serde")))]
 use serde::{Deserialize, Serialize};
-
-use crate::{HeaderProtectionKey, WireguardError, WireguardResult};
-
-use super::{AmneziaWG, HeaderRange, UintRange};
 
 macro_rules! assert_return {
     ($test:expr, $err:expr) => {

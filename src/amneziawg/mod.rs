@@ -1,15 +1,13 @@
 mod range;
 mod ver1;
 mod ver2;
-#[cfg(feature = "amneziawg-3")]
 mod ver3;
 
 use std::fmt;
 
-pub use range::{HeaderRange, UintRange};
+pub use range::{HeaderRange, UintRange, UintRangeOf};
 pub use ver1::*;
 pub use ver2::*;
-#[cfg(feature = "amneziawg-3")]
 pub use ver3::*;
 
 #[allow(unused_imports)]
@@ -37,15 +35,14 @@ use crate::WireguardResult;
 /// [`AmneziaWG`] is `#[serde(untagged)]`, so there is no version tag in the format
 /// and the variant is picked by trying the variants in order, from the newest to the
 /// oldest: `V3`, then `V2`, then `V1`, and an error if none of them matches. In other
-/// words, a config is read as the newest AmneziaWG version it is valid for:
+/// words, a config is read as the newest AmneziaWG version that can parse it:
 ///
 /// - a **AmneziaWG 3.1** config is read as `V3`;
-/// - a **AmneziaWG 2.0** config is read as `V3` too, because every `V2` setting has the
-///   same name and type in `V3`. The exported config doesn't change, only the variant
-///   does;
-/// - **AmneziaWG 1.0** is the only version, that is recognized by its own settings:
-///   it has all 9 of them required and writes `H1`-`H4` as numbers, while `V2` and `V3`
-///   write them as strings;
+/// - **AmneziaWG 2.0** and **1.0** configs are read as `V3` too, because every `V2` and
+///   `V1` setting has the same name in `V3`, and `H1`-`H4` accept both numbers and
+///   ranges. The exported config doesn't change, only the variant does. The `V1` and
+///   `V2` variants are produced only when a value doesn't fit the `V3` types
+///   (f.e. `Jc > 255`), or when the settings are built in code;
 /// - an empty object is read as `V3` with everything unset.
 ///
 /// **Note**
@@ -61,7 +58,6 @@ use crate::WireguardResult;
     serde(untagged)
 )]
 pub enum AmneziaWG {
-    #[cfg(feature = "amneziawg-3")]
     /// AmneziaWG 3.1
     V3(AmneziaWG3),
 
@@ -129,7 +125,6 @@ impl AmneziaWG {
         AmneziaWG2::builder()
     }
 
-    #[cfg(feature = "amneziawg-3")]
     /// Generate random recommended settings for **AmneziaWG 3.1**.
     ///
     /// # Examples
@@ -150,7 +145,6 @@ impl AmneziaWG {
         AmneziaWG3::random()
     }
 
-    #[cfg(feature = "amneziawg-3")]
     /// Alias for `AmneziaWG::builder_v3().build()`
     #[inline]
     #[must_use]
@@ -158,7 +152,6 @@ impl AmneziaWG {
         Self::V3(AmneziaWG3::default())
     }
 
-    #[cfg(feature = "amneziawg-3")]
     /// Create new [`AmneziaWG3Builder`].
     ///
     /// This function is an alias for [`AmneziaWG3::builder()`].
@@ -185,7 +178,6 @@ impl AmneziaWG {
         match self {
             AmneziaWG::V1(settings) => settings.validate(),
             AmneziaWG::V2(settings) => settings.validate(),
-            #[cfg(feature = "amneziawg-3")]
             AmneziaWG::V3(settings) => settings.validate(),
         }
     }
@@ -194,11 +186,13 @@ impl AmneziaWG {
     ///
     /// This is intended for generating server configuration, where
     /// some fields designed to confuse DPI may not be included (e.g., I1-I5).
+    ///
+    /// For the [`V1`](AmneziaWG::V1) variant it is a no-op: AmneziaWG 1.0 has no
+    /// client-only settings.
     pub fn strip_client_data(&mut self) {
         match self {
             AmneziaWG::V1(_) => {}
             AmneziaWG::V2(settings) => settings.strip_client_data(),
-            #[cfg(feature = "amneziawg-3")]
             AmneziaWG::V3(settings) => settings.strip_client_data(),
         }
     }
@@ -216,7 +210,6 @@ impl fmt::Display for AmneziaWG {
         match self {
             AmneziaWG::V1(settings) => settings.fmt(f),
             AmneziaWG::V2(settings) => settings.fmt(f),
-            #[cfg(feature = "amneziawg-3")]
             AmneziaWG::V3(settings) => settings.fmt(f),
         }
     }

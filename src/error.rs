@@ -29,7 +29,7 @@ pub enum WireguardError {
     InvalidAmneziaSetting(&'static str),
 
     /// Error, when header protection key is invalid.
-    #[cfg(feature = "amneziawg-3")]
+    #[cfg(feature = "amneziawg")]
     #[error("invalid header protection key")]
     InvalidHeaderProtectionKey,
 }

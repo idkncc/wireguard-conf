@@ -83,8 +83,12 @@ pub type HeaderRange = UintRangeOf<u32>;
 ///
 /// # Note
 ///
-/// With `serde` a range is serialized as a string in **every** format, not only
-/// in the human-readable ones: it is never a pair of numbers.
+/// With `serde` a range is always **serialized** as a string in **every** format, not
+/// only in the human-readable ones: it is never a pair of numbers.
+///
+/// **Deserialization** also accepts a plain unsigned number (`4` as the range `4-4`),
+/// so it needs a self-describing format (JSON, TOML, YAML, ...). Formats without
+/// self-description (f.e. `bincode`) can't be used to deserialize a range.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct UintRangeOf<T: Num> {
     lo: T,
@@ -203,7 +207,10 @@ impl<T: Num> fmt::Display for UintRangeOf<T> {
 #[cfg(feature = "serde")]
 mod serde_impl {
     use super::{Num, UintRangeOf};
+    use serde::de::{self, Visitor};
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
+    use std::fmt;
+    use std::marker::PhantomData;
 
     impl<T: Num> Serialize for UintRangeOf<T> {
         fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -219,9 +226,34 @@ mod serde_impl {
         where
             D: Deserializer<'de>,
         {
-            String::deserialize(deserializer)?
-                .parse()
-                .map_err(serde::de::Error::custom)
+            deserializer.deserialize_any(RangeVisitor(PhantomData))
+        }
+    }
+
+    /// Accepts a range as a string (`"4"`, `"1-4"`) and, since `V3` accepts numeric
+    /// `H1`-`H4`, a plain unsigned number (`4`) as the range `4-4`.
+    struct RangeVisitor<T: Num>(PhantomData<T>);
+
+    impl<T: Num> Visitor<'_> for RangeVisitor<T> {
+        type Value = UintRangeOf<T>;
+
+        fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+            formatter.write_str("an unsigned integer or a range like \"1-4\"")
+        }
+
+        fn visit_u64<E: de::Error>(self, v: u64) -> Result<Self::Value, E> {
+            let value: T = v.to_string().parse().map_err(de::Error::custom)?;
+            Ok(UintRangeOf::from(value))
+        }
+
+        fn visit_i64<E: de::Error>(self, v: i64) -> Result<Self::Value, E> {
+            let value =
+                u64::try_from(v).map_err(|_| de::Error::custom("range must not be negative"))?;
+            self.visit_u64(value)
+        }
+
+        fn visit_str<E: de::Error>(self, v: &str) -> Result<Self::Value, E> {
+            v.parse().map_err(de::Error::custom)
         }
     }
 }

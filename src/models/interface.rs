@@ -252,9 +252,9 @@ impl Interface {
             allowed_ips: self.address.clone(),
             key: Either::Left(self.private_key.clone()),
             preshared_key: None,
-            #[cfg(feature = "amneziawg-3")]
+            #[cfg(feature = "keepalive-range")]
             persistent_keepalive: UintRange::default(),
-            #[cfg(not(feature = "amneziawg-3"))]
+            #[cfg(not(feature = "keepalive-range"))]
             persistent_keepalive: 0,
         }
     }

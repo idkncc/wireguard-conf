@@ -9,10 +9,14 @@
 //! # Features
 //!
 //! - `amneziawg`: adds support for generating and manually building amnezia settings via
-//!   [`AmneziaWG`] enum.
+//!   the [`AmneziaWG`] enum, including AmneziaWG 1.0, 2.0 and 3.1.
 //!
 //!   > **AmneziaWG** is a fork of wireguard, that less recognizable by DPI systems by
 //!   > randomizing packet headers with packet sizes.
+//!
+//! - `keepalive-range`: lets [`Peer`]'s and [`ToInterfaceOptions`]'
+//!   `persistent_keepalive` accept a range (`20-30`) instead of a single number.
+//!   Implies `amneziawg`.
 //!
 //! - `serde`: adds implementions of [`serde::Serialize`] and [`serde::Deserialize`] for all structs.
 //!

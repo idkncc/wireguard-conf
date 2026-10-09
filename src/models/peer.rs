@@ -20,9 +20,9 @@ pub struct ToInterfaceOptions {
     default_gateway: bool,
 
     /// Option, for setting persistent keepalive to client's peer.
-    #[cfg(feature = "amneziawg-3")]
+    #[cfg(feature = "keepalive-range")]
     persistent_keepalive: UintRange,
-    #[cfg(not(feature = "amneziawg-3"))]
+    #[cfg(not(feature = "keepalive-range"))]
     persistent_keepalive: u16,
 }
 
@@ -44,7 +44,7 @@ impl ToInterfaceOptions {
 
     /// Sets persistent keepalive to client's peer.
     #[must_use]
-    #[cfg(feature = "amneziawg-3")]
+    #[cfg(feature = "keepalive-range")]
     pub fn persistent_keepalive(mut self, value: impl Into<UintRange>) -> Self {
         self.persistent_keepalive = value.into();
         self
@@ -52,7 +52,7 @@ impl ToInterfaceOptions {
 
     /// Sets persistent keepalive to client's peer.
     #[must_use]
-    #[cfg(not(feature = "amneziawg-3"))]
+    #[cfg(not(feature = "keepalive-range"))]
     pub fn persistent_keepalive(mut self, value: u16) -> Self {
         self.persistent_keepalive = value;
         self
@@ -88,14 +88,14 @@ pub struct Peer {
     /// Represents in seconds how often to send an authenticated empty packet to the peer, for the
     /// purpose of keeping a stateful firewall or NAT mapping valid persistently.
     ///
-    /// With `amneziawg` feature it accepts a range (`20-30`), so the interval is
+    /// With `keepalive-range` feature it accepts a range (`20-30`), so the interval is
     /// picked randomly on every handshake. Ranges require AmneziaWG 3.1, while a
     /// single value is exported as a plain number, so it stays valid for
     /// the vanilla WireGuard. A zero range (`0-0`), like a plain `0`, is not
     /// exported at all.
     ///
     /// [Wireguard docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#persistentkeepalive)
-    #[cfg(feature = "amneziawg-3")]
+    #[cfg(feature = "keepalive-range")]
     #[builder(try_setter, setter(into), default)]
     pub persistent_keepalive: UintRange,
     /// Peer's persistent keepalive.
@@ -106,7 +106,7 @@ pub struct Peer {
     /// Setting this value to `0` omits it in config.
     ///
     /// [Wireguard docs](https://github.com/pirate/wireguard-docs?tab=readme-ov-file#persistentkeepalive)
-    #[cfg(not(feature = "amneziawg-3"))]
+    #[cfg(not(feature = "keepalive-range"))]
     #[builder(default)]
     pub persistent_keepalive: u16,
 
@@ -256,12 +256,12 @@ impl Peer {
             };
         }
 
-        #[cfg(feature = "amneziawg-3")]
+        #[cfg(feature = "keepalive-range")]
         if !options.persistent_keepalive.is_zero() {
             client_interface.peers[0].persistent_keepalive = options.persistent_keepalive;
         }
 
-        #[cfg(not(feature = "amneziawg-3"))]
+        #[cfg(not(feature = "keepalive-range"))]
         if options.persistent_keepalive != 0 {
             client_interface.peers[0].persistent_keepalive = options.persistent_keepalive;
         }
@@ -299,12 +299,12 @@ impl fmt::Display for Peer {
         if let Some(preshared_key) = &self.preshared_key {
             writeln!(f, "PresharedKey = {preshared_key}")?;
         }
-        #[cfg(feature = "amneziawg-3")]
+        #[cfg(feature = "keepalive-range")]
         if !self.persistent_keepalive.is_zero() {
             writeln!(f, "PersistentKeepalive = {}", self.persistent_keepalive)?;
         }
 
-        #[cfg(not(feature = "amneziawg-3"))]
+        #[cfg(not(feature = "keepalive-range"))]
         if self.persistent_keepalive != 0 {
             writeln!(f, "PersistentKeepalive = {}", self.persistent_keepalive)?;
         }
