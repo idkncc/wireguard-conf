@@ -83,12 +83,14 @@ pub type HeaderRange = UintRangeOf<u32>;
 ///
 /// # Note
 ///
-/// With `serde` a range is always **serialized** as a string in **every** format, not
-/// only in the human-readable ones: it is never a pair of numbers.
+/// With `serde` a single-value range (`4-4`) is **serialized** as a plain number,
+/// while a multi-value one is a string (`"1-4"`) in **every** format, not only in
+/// the human-readable ones: it is never a pair of numbers.
 ///
-/// **Deserialization** also accepts a plain unsigned number (`4` as the range `4-4`),
-/// so it needs a self-describing format (JSON, TOML, YAML, ...). Formats without
-/// self-description (f.e. `bincode`) can't be used to deserialize a range.
+/// **Deserialization** accepts both a string (`"1-4"`) and a plain unsigned number
+/// (`4` as the range `4-4`), so it needs a self-describing format (JSON, TOML,
+/// YAML, ...). Formats without self-description (f.e. `bincode`) can't be used to
+/// deserialize a range.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct UintRangeOf<T: Num> {
     lo: T,
@@ -212,12 +214,16 @@ mod serde_impl {
     use std::fmt;
     use std::marker::PhantomData;
 
-    impl<T: Num> Serialize for UintRangeOf<T> {
+    impl<T: Num + Serialize> Serialize for UintRangeOf<T> {
         fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where
             S: Serializer,
         {
-            serializer.serialize_str(&self.to_string())
+            if self.lo == self.hi {
+                self.lo.serialize(serializer)
+            } else {
+                self.to_string().serialize(serializer)
+            }
         }
     }
 

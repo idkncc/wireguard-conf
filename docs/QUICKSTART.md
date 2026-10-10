@@ -208,6 +208,10 @@ With `ToInterfaceOptions` you can:
 - Make server a default gateway (`.default_gateway(true)`)
 - Set PersistentKeepalive to Server's `Peer` (`.persistent_keepalive(value)`)
 
+With `keepalive-range` feature (implies `amneziawg`) `PersistentKeepalive` also accepts
+a range (`.persistent_keepalive("20-30".parse::<UintRange>())`), that requires
+AmneziaWG 3.1.
+
 ```rust
 let client_interface = client_peer
     .to_interface(

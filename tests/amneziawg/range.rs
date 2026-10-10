@@ -107,7 +107,7 @@ macro_rules! width_tests {
 
                 let single = parse("4");
                 let json = serde_json::to_string(&single).expect("range is serializable");
-                assert_eq!(json, r#""4""#);
+                assert_eq!(json, "4");
                 assert_eq!(
                     serde_json::from_str::<$range>(&json).expect("range is deserializable"),
                     single
