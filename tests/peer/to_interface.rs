@@ -121,3 +121,22 @@ fn default_gateway_ipv4_and_ipv6() {
         ]
     )
 }
+
+#[test]
+fn zero_persistent_keepalive_is_not_passed() {
+    let server_interface = InterfaceBuilder::new()
+        .address([as_ipnet!("10.0.0.1/24")])
+        .build();
+    let client_peer = PeerBuilder::new()
+        .allowed_ips([as_ipnet!("10.0.0.2/32")])
+        .build();
+
+    let client_interface = client_peer
+        .to_interface(
+            &server_interface,
+            ToInterfaceOptions::new().persistent_keepalive(0),
+        )
+        .expect("valid interface");
+
+    assert!(!client_interface.to_string().contains("PersistentKeepalive"));
+}
