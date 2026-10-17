@@ -25,66 +25,6 @@ fn validate_jc() {
 }
 
 #[test]
-// FIX: Старые границы
-fn validate_jmin() {
-    let mut settings = AmneziaWG::random_v3();
-
-    match settings {
-        AmneziaWG::V3(ref mut settings) => {
-            settings.jmin = Some(63);
-        }
-        _ => unreachable!(),
-    }
-
-    assert_eq!(
-        settings.validate(),
-        Err(WireguardError::InvalidAmneziaSetting("Jmin"))
-    );
-
-    match settings {
-        AmneziaWG::V3(ref mut settings) => {
-            settings.jmin = Some(1025);
-        }
-        _ => unreachable!(),
-    }
-
-    assert_eq!(
-        settings.validate(),
-        Err(WireguardError::InvalidAmneziaSetting("Jmin"))
-    );
-}
-
-#[test]
-// FIX: Старые границы
-fn validate_jmax() {
-    let mut settings = AmneziaWG::random_v3();
-
-    match settings {
-        AmneziaWG::V3(ref mut settings) => {
-            settings.jmax = Some(63);
-        }
-        _ => unreachable!(),
-    }
-
-    assert_eq!(
-        settings.validate(),
-        Err(WireguardError::InvalidAmneziaSetting("Jmax"))
-    );
-
-    match settings {
-        AmneziaWG::V3(ref mut settings) => {
-            settings.jmax = Some(1025);
-        }
-        _ => unreachable!(),
-    }
-
-    assert_eq!(
-        settings.validate(),
-        Err(WireguardError::InvalidAmneziaSetting("Jmax"))
-    );
-}
-
-#[test]
 fn validate_jmin_jmax() {
     let mut settings = AmneziaWG::random_v3();
 
@@ -98,7 +38,7 @@ fn validate_jmin_jmax() {
 
     assert_eq!(
         settings.validate(),
-        Err(WireguardError::InvalidAmneziaSetting("Jmin >= Jmax"))
+        Err(WireguardError::InvalidAmneziaSetting("Jmin > Jmax"))
     );
 }
 
@@ -160,6 +100,7 @@ fn validate_s2() {
     match settings {
         AmneziaWG::V3(ref mut settings) => {
             settings.header_protection_key = Some(HeaderProtectionKey::random());
+            settings.s1 = Some(12);
             settings.s2 = Some(11);
         }
         _ => unreachable!(),
@@ -199,6 +140,8 @@ fn validate_s3() {
     match settings {
         AmneziaWG::V3(ref mut settings) => {
             settings.header_protection_key = Some(HeaderProtectionKey::random());
+            settings.s1 = Some(12);
+            settings.s2 = Some(12);
             settings.s3 = Some(11);
         }
         _ => unreachable!(),
@@ -238,6 +181,9 @@ fn validate_s4() {
     match settings {
         AmneziaWG::V3(ref mut settings) => {
             settings.header_protection_key = Some(HeaderProtectionKey::random());
+            settings.s1 = Some(12);
+            settings.s2 = Some(12);
+            settings.s3 = Some(12);
             settings.s4 = Some(11);
         }
         _ => unreachable!(),
@@ -251,6 +197,35 @@ fn validate_s4() {
     match settings {
         AmneziaWG::V3(ref mut settings) => {
             settings.header_protection_key = None;
+        }
+        _ => unreachable!(),
+    }
+
+    assert_eq!(settings.validate(), Ok(()));
+}
+
+#[test]
+fn validate_hpk_requires_s() {
+    let mut settings = AmneziaWG::empty_v3();
+
+    match settings {
+        AmneziaWG::V3(ref mut settings) => {
+            settings.header_protection_key = Some(HeaderProtectionKey::random());
+        }
+        _ => unreachable!(),
+    }
+
+    assert_eq!(
+        settings.validate(),
+        Err(WireguardError::InvalidAmneziaSetting("S1"))
+    );
+
+    match settings {
+        AmneziaWG::V3(ref mut settings) => {
+            settings.s1 = Some(12);
+            settings.s2 = Some(12);
+            settings.s3 = Some(12);
+            settings.s4 = Some(12);
         }
         _ => unreachable!(),
     }

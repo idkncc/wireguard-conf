@@ -41,8 +41,8 @@ use crate::WireguardResult;
 /// - **AmneziaWG 2.0** and **1.0** configs are read as `V3` too, because every `V2` and
 ///   `V1` setting has the same name in `V3`, and `H1`-`H4` accept both numbers and
 ///   ranges. The exported config doesn't change, only the variant does. The `V1` and
-///   `V2` variants are produced only when a value doesn't fit the `V3` types
-///   (f.e. `Jc > 255`), or when the settings are built in code;
+///   `V2` variants are produced only when a value doesn't fit the `V3` types, or when
+///   the settings are built in code;
 /// - an empty object is read as `V3` with everything unset.
 ///
 /// **Note**

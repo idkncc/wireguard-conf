@@ -19,10 +19,8 @@
 - Added support for AmneziaWG 3.1.
 - Added `AmneziaWG::strip_client_data` (with `AmneziaWG2`/`AmneziaWG3` implementations)
   and `Interface::strip_client_data` for generating server configuration files:
-  removes client-side junk packets (`Jc`, `Jmin`, `Jmax`) and the CPS-chain
-  (`I1`-`I5`), keeps settings that must match on both sides. The AmneziaWG 3.1
-  timers are removed as well, because they are marked as client-side; whether
-  they really have to be stripped from the server's config is not decided yet.
+  removes junk packets (`Jc`, `Jmin`, `Jmax`) and the CPS-chain
+  (`I1`-`I5`), keeps the rest.
 - `Peer::persistent_keepalive` and `ToInterfaceOptions::persistent_keepalive`
   both accept a range with the `keepalive-range` feature (implies `amneziawg`):
   they are `UintRange` instead of `u16`. A single value is still exported

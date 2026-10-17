@@ -55,8 +55,8 @@ pub type HeaderRange = UintRangeOf<u32>;
 /// # use wireguard_conf::prelude::*;
 /// # fn main() -> WireguardResult<()> {
 /// let settings = AmneziaWG::builder_v3()
-///     .h1(1) // still a number
-///     .try_h2("2-4")? // now a range
+///     .h1(7) // still a number
+///     .try_h2("1-2")? // now a range
 ///     // <snip>
 ///     .build()?;
 /// # Ok(())

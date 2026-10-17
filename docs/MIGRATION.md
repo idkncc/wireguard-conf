@@ -56,8 +56,8 @@ packets (`Jc`, `Jmin`, `Jmax`) are sent by the client before the handshake and
 are not needed in the server's config.
 
 To generate a server config, use `AmneziaWG::strip_client_data` (or
-`Interface::strip_client_data`) instead. It removes client-side settings and
-keeps the shared ones:
+`Interface::strip_client_data`) instead. It removes junk packets
+(`Jc`, `Jmin`, `Jmax`) and the CPS-chain (`I1`-`I5`), keeps the rest:
 
 ```rust
 let interface = InterfaceBuilder::new()
@@ -69,13 +69,6 @@ let full_conf = interface.to_string();
 // the config for the server
 let server_conf = interface.strip_client_data().to_string();
 ```
-
-> **Note**
->
-> The AmneziaWG 3.1 timers (`RekeyAfterTime`, `RekeyTimeout`, `RejectAfterTime`,
-> `KeepaliveTimeout` and `MaxHandshakeAttempts`) are removed as well, because they are
-> marked as client-side. Whether they really have to be stripped from the server's
-> config is not decided yet, so this may change.
 
 `AmneziaWG::strip_client_data` modifies the settings in place (it takes `&mut self`;
 for `V1` it is a no-op). `Interface::strip_client_data()` takes `&self` and returns a

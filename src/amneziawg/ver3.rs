@@ -44,18 +44,14 @@ macro_rules! assert_return {
 pub struct AmneziaWG3 {
     /// Recomended: 4 ≤ Jc ≤ 12
     /// General recommendation is to use it on the client side only.
-    // WARN: Модуль ядра примет от 0 до 65535,
-    // go-версия судя по коду до 2^32-1,
-    // но Android-приложение упадет на значениях выше 126.
+    // WARN: Ждет ответа на issue.
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     #[builder(setter(strip_option), default)]
     pub jc: Option<u8>,
 
     /// 0 <= Jmin <= Jmax
     /// General recommendation is to use it on the client side only.
-    // WARN: Модуль ядра примет от 0 до 65535,
-    // go-версия судя по коду до 2^32-1,
-    // Android-приложение принимает больше чем 429496729 (ему очень плохо, но принимает).
+    // WARN: Ждет ответа на issue.
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     #[builder(setter(strip_option), default)]
     pub jmin: Option<u16>,
@@ -63,9 +59,7 @@ pub struct AmneziaWG3 {
     /// 0 <= Jmin <= Jmax
     /// Recomended: Jmax <= system MTU
     /// General recommendation is to use it on the client side only.
-    // WARN: Модуль ядра примет от 0 до 65535,
-    // go-версия судя по коду до 2^32-1,
-    // Android-приложение принимает больше чем 429496729 (ему очень плохо, но принимает).
+    // WARN: Ждет ответа на issue.
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     #[builder(setter(strip_option), default)]
     pub jmax: Option<u16>,
@@ -74,9 +68,7 @@ pub struct AmneziaWG3 {
     ///
     /// 0 <= S1 <= 64 (if HeaderProtectionKey is not specified)
     /// 12 <= S1 <= 64 (if HeaderProtectionKey is specified)
-    /// WARN: Скорее всего верхняя граница не изменилась с AWG2.0,
-    /// но по актуальной документации не совсем понятно,
-    /// у какого конкретно поля (S1-S4) верхняя граница — 32.
+    // WARN: Ждет ответа на issue.
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     #[builder(setter(strip_option), default)]
     pub s1: Option<u8>,
@@ -85,9 +77,7 @@ pub struct AmneziaWG3 {
     ///
     /// 0 <= S2 <= 64 (if HeaderProtectionKey is not specified)
     /// 12 <= S2 <= 64 (if HeaderProtectionKey is specified)
-    /// WARN: Скорее всего верхняя граница не изменилась с AWG2.0,
-    /// но по актуальной документации не совсем понятно,
-    /// у какого конкретно поля (S1-S4) верхняя граница — 32.
+    // WARN: Ждет ответа на issue.
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     #[builder(setter(strip_option), default)]
     pub s2: Option<u8>,
@@ -96,9 +86,7 @@ pub struct AmneziaWG3 {
     ///
     /// 0 <= S3 <= 64 (if HeaderProtectionKey is not specified)
     /// 12 <= S3 <= 64 (if HeaderProtectionKey is specified)
-    /// WARN: Скорее всего верхняя граница не изменилась с AWG2.0,
-    /// но по актуальной документации не совсем понятно,
-    /// у какого конкретно поля (S1-S4) верхняя граница — 32.
+    // WARN: Ждет ответа на issue.
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     #[builder(setter(strip_option), default)]
     pub s3: Option<u8>,
@@ -107,37 +95,43 @@ pub struct AmneziaWG3 {
     ///
     /// 0 <= S4 <= 32 (if HeaderProtectionKey is not specified)
     /// 12 <= S4 <= 32 (if HeaderProtectionKey is specified)
-    /// WARN: Скорее всего верхняя граница не изменилась с AWG2.0,
-    /// но по актуальной документации не совсем понятно,
-    /// у какого конкретно поля (S1-S4) верхняя граница — 32.
+    // WARN: Ждет ответа на issue.
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     #[builder(setter(strip_option), default)]
     pub s4: Option<u8>,
 
     /// Random header range for Init packets; H1-H4 ranges must not overlap.
-    /// If HeaderProtectionKey is specified, it is recommended to use the value 1.
-    /// In this mode, the custom header mechanism is disabled (equivalent to the absence of the field).
+    ///
+    /// The default value `H1 = 1` disables the custom header for this type of packet.
+    /// If the `HeaderProtectionKey` parameter is set, it is recommended to keep
+    /// this standard compatibility value.
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     #[builder(setter(into, strip_option), try_setter, default)]
     pub h1: Option<HeaderRange>,
 
     /// Random header range for Response packets; H1-H4 ranges must not overlap.
-    /// If HeaderProtectionKey is specified, it is recommended to use the value 2.
-    /// In this mode, the custom header mechanism is disabled (equivalent to the absence of the field).
+    ///
+    /// The default value `H2 = 2` disables the custom header for this type of packet.
+    /// If the `HeaderProtectionKey` parameter is set, it is recommended to keep
+    /// this standard compatibility value.
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     #[builder(setter(into, strip_option), try_setter, default)]
     pub h2: Option<HeaderRange>,
 
     /// Random header range for Cookie packets; H1-H4 ranges must not overlap.
-    /// If HeaderProtectionKey is specified, it is recommended to use the value 3.
-    /// In this mode, the custom header mechanism is disabled (equivalent to the absence of the field).
+    ///
+    /// The default value `H3 = 3` disables the custom header for this type of packet.
+    /// If the `HeaderProtectionKey` parameter is set, it is recommended to keep
+    /// this standard compatibility value.
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     #[builder(setter(into, strip_option), try_setter, default)]
     pub h3: Option<HeaderRange>,
 
     /// Random header range for Transport packets; H1-H4 ranges must not overlap.
-    /// If HeaderProtectionKey is specified, it is recommended to use the value 4.
-    /// In this mode, the custom header mechanism is disabled (equivalent to the absence of the field).
+    ///
+    /// The default value `H4 = 4` disables the custom header for this type of packet.
+    /// If the `HeaderProtectionKey` parameter is set, it is recommended to keep
+    /// this standard compatibility value.
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     #[builder(setter(into, strip_option), try_setter, default)]
     pub h4: Option<HeaderRange>,
@@ -184,41 +178,39 @@ pub struct AmneziaWG3 {
     /// Adds a random number of bytes from a specified range
     /// to transport packets. The padding uses
     /// the available space up to the internal MTU and does not exceed it.
+    ///
+    /// It's important to specify content padding on both sides. However,
+    /// this is not strictly required and could be omitted.
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     #[builder(setter(into, strip_option), try_setter, default)]
     pub content_padding_addition: Option<UintRange>,
 
     /// Interval before re-handshake.
-    // PERF: Поле указано как `client-side`, но рекомендации по использованиию
-    // только на клиентской стороне в документации нет.
+    /// It is not required to be the same on both server and client.
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     #[builder(setter(into, strip_option), try_setter, default)]
     pub rekey_after_time: Option<UintRange>,
 
     /// Handshake timeout.
-    // PERF: Поле указано как `client-side`, но рекомендации по использованиию
-    // только на клиентской стороне в документации нет.
+    /// It is not required to be the same on both server and client.
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     #[builder(setter(into, strip_option), try_setter, default)]
     pub rekey_timeout: Option<UintRange>,
 
     /// Interval after which the connection initiates a new handshake if no data is received.
-    // PERF: Поле указано как `client-side`, но рекомендации по использованиию
-    // только на клиентской стороне в документации нет.
+    /// It is not required to be the same on both server and client.
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     #[builder(setter(into, strip_option), try_setter, default)]
     pub reject_after_time: Option<UintRange>,
 
     /// Interval before sending keepalive.
-    // PERF: Поле указано как `client-side`, но рекомендации по использованиию
-    // только на клиентской стороне в документации нет.
+    /// It is not required to be the same on both server and client.
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     #[builder(setter(into, strip_option), try_setter, default)]
     pub keepalive_timeout: Option<UintRange>,
 
     /// Maximum number of handshake retries.
-    // PERF: Поле указано как `client-side`, но рекомендации по использованиию
-    // только на клиентской стороне в документации нет.
+    /// It is not required to be the same on both server and client.
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     #[builder(setter(into, strip_option), try_setter, default)]
     pub max_handshake_attempts: Option<UintRange>,
@@ -231,6 +223,7 @@ pub struct AmneziaWG3 {
     pub random_trailers: Option<bool>,
 
     /// Disables sending Cookie Reply.
+    /// It is not required to be the same on both server and client.
     #[cfg_attr(feature = "serde", serde(skip_serializing_if = "Option::is_none"))]
     #[builder(setter(into, strip_option), default)]
     pub disable_cookies: Option<bool>,
@@ -271,22 +264,19 @@ impl AmneziaWG3 {
     pub fn validate(&self) -> WireguardResult<()> {
         macro_rules! validate_range {
             ($field:ident in $range:expr, $name:literal) => {
-                if let Some(value) = self.$field {
-                    assert_return!(
-                        $range.contains(&value),
-                        WireguardError::InvalidAmneziaSetting($name)
-                    );
-                }
+                assert_return!(
+                    $range.contains(&self.$field.unwrap_or(0)),
+                    WireguardError::InvalidAmneziaSetting($name)
+                );
             };
         }
 
         validate_range!(jc in 0..=126, "Jc");
-        validate_range!(jmin in 64..=1024, "Jmin"); // FIX: старые границы.
-        validate_range!(jmax in 64..=1024, "Jmax"); // FIX: старые границы.
+
         if let (Some(jmin), Some(jmax)) = (self.jmin, self.jmax) {
             assert_return!(
-                jmin < jmax,
-                WireguardError::InvalidAmneziaSetting("Jmin >= Jmax")
+                jmin <= jmax,
+                WireguardError::InvalidAmneziaSetting("Jmin > Jmax")
             );
         }
 
@@ -300,12 +290,12 @@ impl AmneziaWG3 {
         validate_range!(s3 in s_min..=64, "S3");
         validate_range!(s4 in s_min..=32, "S4");
 
-        // FIX: Возможно стоит запретить задавать H1-H4 при наличии HPK.
-        // FIX: Возможно стоит проверять что S1=S2=S3=S4 при RandomTrailers = on.
-        let mut ranges: Vec<_> = [&self.h1, &self.h2, &self.h3, &self.h4]
-            .into_iter()
-            .flatten()
-            .collect();
+        let mut ranges = [
+            self.h1.unwrap_or(1.into()),
+            self.h2.unwrap_or(2.into()),
+            self.h3.unwrap_or(3.into()),
+            self.h4.unwrap_or(4.into()),
+        ];
         ranges.sort();
         assert_return!(
             ranges.windows(2).all(|p| p[0].hi() < p[1].lo()),
@@ -319,38 +309,13 @@ impl AmneziaWG3 {
     ///
     /// This is intended for generating server configuration, where
     /// some fields designed to confuse DPI may not be included (e.g., I1-I5).
-    ///
-    /// Returns a new instance with client-only settings removed.
-    ///
-    /// **Note**
-    ///
-    /// The AmneziaWG 3.1 timers (`RekeyAfterTime`, `RekeyTimeout`, `RejectAfterTime`,
-    /// `KeepaliveTimeout` and `MaxHandshakeAttempts`) are removed as well, because they are
-    /// marked as client-side. Whether they really have to be stripped from the server's
-    /// config is not decided yet, so this may change.
     pub fn strip_client_data(&mut self) {
         macro_rules! set_none {
             ($($field:ident),+) => {
                 $(self.$field = None;)+
             };
         }
-        set_none!(
-            jc,
-            jmin,
-            jmax,
-            i1,
-            i2,
-            i3,
-            i4,
-            i5,
-            // Решение по таймерам отложено: они помечены как client-side,
-            // но нужно ли вычищать их на сервере, пока не решено.
-            rekey_after_time,
-            rekey_timeout,
-            reject_after_time,
-            keepalive_timeout,
-            max_handshake_attempts
-        );
+        set_none!(jc, jmin, jmax, i1, i2, i3, i4, i5);
     }
 
     /// Create new [`AmneziaWG3Builder`].

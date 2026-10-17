@@ -183,6 +183,11 @@ fn server_config_strips_client_only_settings() {
             H4 = 6
             HeaderProtectionKey = {header_protection_key}
             ContentPaddingAddition = 5-8
+            RekeyAfterTime = 10-20
+            RekeyTimeout = 30-40
+            RejectAfterTime = 50-60
+            KeepaliveTimeout = 70-80
+            MaxHandshakeAttempts = 2-5
             RandomTrailers = on
             DisableCookies = off
 
