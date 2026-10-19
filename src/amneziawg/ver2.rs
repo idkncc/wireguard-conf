@@ -1,4 +1,5 @@
 //! Module for AmneziaWG 2.0
+// TODO: переписать.
 
 use derive_builder::Builder;
 use rand::prelude::*;
@@ -23,6 +24,11 @@ macro_rules! assert_return {
 }
 
 /// Inclusive range of H values used by AmneziaWG 2.0.
+///
+/// # Note
+///
+/// With `serde` an `HRange` is serialized as a string in **every** format, not
+/// only in the human-readable ones: it is never a pair of numbers.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct HRange {
     min: u32,
@@ -208,7 +214,7 @@ impl AmneziaWG2 {
                 if let Some(value) = self.$field {
                     assert_return!(
                         $range.contains(&value),
-                        WireguardError::InvalidAmneziaSetting($name.to_string())
+                        WireguardError::InvalidAmneziaSetting($name)
                     );
                 }
             };
@@ -216,10 +222,7 @@ impl AmneziaWG2 {
         macro_rules! validate {
             ($field:ident, $name:literal, $expr:expr) => {
                 if let Some($field) = &self.$field {
-                    assert_return!(
-                        $expr,
-                        WireguardError::InvalidAmneziaSetting($name.to_string())
-                    );
+                    assert_return!($expr, WireguardError::InvalidAmneziaSetting($name));
                 }
             };
         }
@@ -230,7 +233,7 @@ impl AmneziaWG2 {
         if let (Some(jmin), Some(jmax)) = (self.jmin, self.jmax) {
             assert_return!(
                 jmin < jmax,
-                WireguardError::InvalidAmneziaSetting("Jmin >= Jmax".to_string())
+                WireguardError::InvalidAmneziaSetting("Jmin >= Jmax")
             );
         }
         validate_range!(s1 in 0..=64, "S1");
@@ -249,22 +252,23 @@ impl AmneziaWG2 {
         ranges.sort();
         assert_return!(
             ranges.windows(2).all(|p| p[0].max < p[1].min),
-            WireguardError::InvalidAmneziaSetting("H ranges overlap".to_string())
+            WireguardError::InvalidAmneziaSetting("H ranges overlap")
         );
 
         Ok(())
     }
 
-    /// Removes server-only AmneziaWG settings.
+    /// Removes AmneziaWG settings that are not required for the server.
     ///
-    /// This is intended for generating client configuration files, where
-    /// server-specific fields (such as I1-I5) must not be included.
-    pub fn strip_server_data(&mut self) {
-        self.i1 = None;
-        self.i2 = None;
-        self.i3 = None;
-        self.i4 = None;
-        self.i5 = None;
+    /// This is intended for generating server configuration, where
+    /// some fields designed to confuse DPI may not be included (e.g., I1-I5).
+    pub fn strip_client_data(&mut self) {
+        macro_rules! set_none {
+            ($($field:ident),+) => {
+                $(self.$field = None;)+
+            };
+        }
+        set_none!(jc, jmin, jmax, i1, i2, i3, i4, i5);
     }
 
     /// Create new [`AmneziaWG2Builder`].
@@ -365,7 +369,7 @@ impl Serialize for HRange {
     where
         S: Serializer,
     {
-        serializer.serialize_str(&format!("{}-{}", self.min, self.max))
+        serializer.serialize_str(&self.to_string())
     }
 }
 

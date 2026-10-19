@@ -1,12 +1,14 @@
+mod range;
 mod ver1;
 mod ver2;
+mod ver3;
 
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
 use std::fmt;
 
+pub use range::{HeaderRange, UintRange, UintRangeOf};
 pub use ver1::*;
 pub use ver2::*;
+pub use ver3::*;
 
 #[allow(unused_imports)]
 use crate::WireguardError;
@@ -19,6 +21,7 @@ use crate::WireguardResult;
 /// # use wireguard_conf::prelude::*;
 /// let settings = AmneziaWG::random_v1();
 /// let settings = AmneziaWG::random_v2();
+/// let settings = AmneziaWG::random_v3();
 ///
 /// assert_eq!(settings.validate(), Ok(()));
 ///
@@ -26,15 +29,43 @@ use crate::WireguardResult;
 ///
 /// println!("{settings}");
 /// ```
+///
+/// # Deserialization
+///
+/// [`AmneziaWG`] is `#[serde(untagged)]`, so there is no version tag in the format
+/// and the variant is picked by trying the variants in order, from the newest to the
+/// oldest: `V3`, then `V2`, then `V1`, and an error if none of them matches. In other
+/// words, a config is read as the newest AmneziaWG version that can parse it:
+///
+/// - a **AmneziaWG 3.1** config is read as `V3`;
+/// - **AmneziaWG 2.0** and **1.0** configs are read as `V3` too, because every `V2` and
+///   `V1` setting has the same name in `V3`, and `H1`-`H4` accept both numbers and
+///   ranges. The exported config doesn't change, only the variant does. The `V1` and
+///   `V2` variants are produced only when a value doesn't fit the `V3` types, or when
+///   the settings are built in code;
+/// - an empty object is read as `V3` with everything unset.
+///
+/// **Note**
+///
+/// A variant matches even when it recognized nothing, because all of its settings are
+/// `Option` and unknown fields are ignored. So a typo in a setting name is silently
+/// dropped instead of failing, and an object with no known settings at all is read as
+/// an empty config rather than as an error.
 #[derive(Clone, Debug, PartialEq)]
-#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-#[cfg_attr(feature = "serde", serde(untagged))]
+#[cfg_attr(
+    feature = "serde",
+    derive(serde::Deserialize, serde::Serialize),
+    serde(untagged)
+)]
 pub enum AmneziaWG {
-    /// AmneziaWG 1.0
-    V1(AmneziaWG1),
+    /// AmneziaWG 3.1
+    V3(AmneziaWG3),
 
     /// AmneziaWG 2.0
     V2(AmneziaWG2),
+
+    /// AmneziaWG 1.0
+    V1(AmneziaWG1),
 }
 
 impl AmneziaWG {
@@ -94,6 +125,42 @@ impl AmneziaWG {
         AmneziaWG2::builder()
     }
 
+    /// Generate random recommended settings for **AmneziaWG 3.1**.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use wireguard_conf::prelude::*;
+    ///
+    /// let settings = AmneziaWG::random_v3();
+    ///
+    /// _ = InterfaceBuilder::new()
+    ///    // <snip>
+    ///    .amnezia_settings(settings)
+    ///    .build();
+    /// ```
+    #[inline]
+    #[must_use]
+    pub fn random_v3() -> Self {
+        AmneziaWG3::random()
+    }
+
+    /// Alias for `AmneziaWG::builder_v3().build()`
+    #[inline]
+    #[must_use]
+    pub fn empty_v3() -> Self {
+        Self::V3(AmneziaWG3::default())
+    }
+
+    /// Create new [`AmneziaWG3Builder`].
+    ///
+    /// This function is an alias for [`AmneziaWG3::builder()`].
+    #[inline]
+    #[must_use]
+    pub fn builder_v3() -> AmneziaWG3Builder {
+        AmneziaWG3::builder()
+    }
+
     /// Validates [`AmneziaWG`] values.
     ///
     /// ```
@@ -111,17 +178,22 @@ impl AmneziaWG {
         match self {
             AmneziaWG::V1(settings) => settings.validate(),
             AmneziaWG::V2(settings) => settings.validate(),
+            AmneziaWG::V3(settings) => settings.validate(),
         }
     }
 
-    /// Removes server-only AmneziaWG settings.
+    /// Removes AmneziaWG settings that are not required for the server.
     ///
-    /// This is intended for generating client configuration files, where
-    /// server-specific fields (such as I1-I5) must not be included.
-    pub fn strip_server_data(&mut self) {
+    /// This is intended for generating server configuration, where
+    /// some fields designed to confuse DPI may not be included (e.g., I1-I5).
+    ///
+    /// For the [`V1`](AmneziaWG::V1) variant it is a no-op: AmneziaWG 1.0 has no
+    /// client-only settings.
+    pub fn strip_client_data(&mut self) {
         match self {
             AmneziaWG::V1(_) => {}
-            AmneziaWG::V2(settings) => settings.strip_server_data(),
+            AmneziaWG::V2(settings) => settings.strip_client_data(),
+            AmneziaWG::V3(settings) => settings.strip_client_data(),
         }
     }
 }
@@ -138,6 +210,7 @@ impl fmt::Display for AmneziaWG {
         match self {
             AmneziaWG::V1(settings) => settings.fmt(f),
             AmneziaWG::V2(settings) => settings.fmt(f),
+            AmneziaWG::V3(settings) => settings.fmt(f),
         }
     }
 }

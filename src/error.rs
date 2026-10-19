@@ -26,7 +26,12 @@ pub enum WireguardError {
     /// Error, when some amnezia setting is invalid
     #[cfg(feature = "amneziawg")]
     #[error("invalid amnezia setting: {0}")]
-    InvalidAmneziaSetting(String),
+    InvalidAmneziaSetting(&'static str),
+
+    /// Error, when header protection key is invalid.
+    #[cfg(feature = "amneziawg")]
+    #[error("invalid header protection key")]
+    InvalidHeaderProtectionKey,
 }
 
 /// Result alias.
