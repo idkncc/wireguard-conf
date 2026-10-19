@@ -137,7 +137,7 @@ fn mtu() {
 #[cfg(feature = "amneziawg")]
 #[test]
 fn amnezia_settings() {
-    let amnezia_settings = AmneziaWG::random_v2();
+    let amnezia_settings = AmneziaWG::random_v3();
 
     let interface = InterfaceBuilder::new()
         .amnezia_settings(amnezia_settings.clone())

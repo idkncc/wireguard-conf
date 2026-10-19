@@ -20,10 +20,6 @@ pub fn private_key() {
         PrivateKey::try_from(private_key_str.to_string()),
         Ok(private_key.clone())
     );
-    assert_eq!(
-        PrivateKey::try_from(private_key_str.to_string()),
-        Ok(private_key.clone())
-    );
 
     assert_eq!(
         PrivateKey::try_from("ThisWillBeErrored"),
@@ -114,5 +110,44 @@ pub fn preshared_key_serde() {
     assert_ok_eq!(
         preshared_key.serialize(&serializer),
         [Token::Bytes(preshared_key.as_bytes().to_vec())]
+    );
+}
+
+#[cfg(feature = "amneziawg")]
+#[test]
+pub fn header_key() {
+    let header_key = HeaderProtectionKey::random();
+    let header_key_str = header_key.to_string();
+
+    assert_eq!(
+        HeaderProtectionKey::try_from(header_key_str.as_str()),
+        Ok(header_key.clone())
+    );
+    assert_eq!(
+        HeaderProtectionKey::try_from(header_key_str.to_string()),
+        Ok(header_key.clone())
+    );
+
+    assert_eq!(
+        HeaderProtectionKey::try_from("ThisWillBeErrored"),
+        Err(WireguardError::InvalidHeaderProtectionKey)
+    );
+}
+
+#[cfg(all(feature = "amneziawg", feature = "serde"))]
+#[test]
+pub fn header_key_serde() {
+    let header_key = HeaderProtectionKey::random();
+
+    let serializer = Serializer::builder().build();
+    assert_ok_eq!(
+        header_key.serialize(&serializer),
+        [Token::Str(header_key.to_string())]
+    );
+
+    let serializer = Serializer::builder().is_human_readable(false).build();
+    assert_ok_eq!(
+        header_key.serialize(&serializer),
+        [Token::Bytes(header_key.as_bytes().to_vec())]
     );
 }

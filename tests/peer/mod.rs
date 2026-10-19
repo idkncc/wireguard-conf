@@ -16,6 +16,9 @@ fn empty_peer() {
         Peer {
             endpoint: None,
             allowed_ips: vec![],
+            #[cfg(feature = "keepalive-range")]
+            persistent_keepalive: UintRange::default(),
+            #[cfg(not(feature = "keepalive-range"))]
             persistent_keepalive: 0,
             key,
             preshared_key: None,
@@ -39,15 +42,48 @@ fn allowed_ips() {
     let peer = PeerBuilder::new().allowed_ips(allowed_ips).build();
 
     assert_eq!(peer.allowed_ips, allowed_ips.to_vec());
+    assert!(
+        peer.to_string()
+            .contains("AllowedIPs = 1.2.0.0/16,fd00::/48")
+    );
 }
 
 #[test]
 fn persistent_keepalive() {
-    let persistent_keepalive = 25;
-
     let peer = PeerBuilder::new().persistent_keepalive(25).build();
 
-    assert_eq!(peer.persistent_keepalive, persistent_keepalive);
+    #[cfg(feature = "keepalive-range")]
+    assert_eq!(peer.persistent_keepalive, UintRange::from(25));
+    #[cfg(not(feature = "keepalive-range"))]
+    assert_eq!(peer.persistent_keepalive, 25);
+}
+
+#[test]
+#[cfg(feature = "keepalive-range")]
+fn persistent_keepalive_range() {
+    let peer = PeerBuilder::new()
+        .try_persistent_keepalive("20-30")
+        .expect("valid range")
+        .build();
+
+    assert_eq!(
+        (
+            peer.persistent_keepalive.lo(),
+            peer.persistent_keepalive.hi()
+        ),
+        (20, 30)
+    );
+
+    let peer = PeerBuilder::new()
+        .try_persistent_keepalive("0-0")
+        .expect("valid range")
+        .build();
+
+    assert!(peer.persistent_keepalive.is_zero());
+
+    let peer = PeerBuilder::new().persistent_keepalive(0).build();
+
+    assert!(peer.persistent_keepalive.is_zero());
 }
 
 #[test]

@@ -2,10 +2,10 @@
 
 First thing to undestand is **small terminology**, that will be used here and in the documentation:
 
- - Interface -- is a complete config, that starts with `[Interface]` and includes Peers (`[Peer]` sections).
- - Peer -- is a `[Peer]` section of config.
- - Server -- remote instance of Wireguard (e.g. VPS, Office, etc.)
- - Client -- local instance of Wireguard (e.g. Your PC, etc.)
+- Interface -- is a complete config, that starts with `[Interface]` and includes Peers (`[Peer]` sections).
+- Peer -- is a `[Peer]` section of config.
+- Server -- remote instance of Wireguard (e.g. VPS, Office, etc.)
+- Client -- local instance of Wireguard (e.g. Your PC, etc.)
 
 Also, I'm assuming, that you already know and understand Wireguard, networking and IP.
 
@@ -14,7 +14,7 @@ Also, I'm assuming, that you already know and understand Wireguard, networking a
 Usual stuff, nothing very special
 
 ```shell
-$ cargo add wireguard_conf
+cargo add wireguard_conf
 ```
 
 ```rust
@@ -45,9 +45,9 @@ In this example, we wont save and load private keys, but it can be implemented b
 >
 > You can also use `serde` feature! It will add `Serialize` and `Deserialize` traits to all structs (including private and public keys).
 
-## Creating Server's Interface.
+## Creating Server's Interface
 
-For creating one, we'll use `InterfaceBuilder`. It has convenient methods and design. To create 
+For creating one, we'll use `InterfaceBuilder`. It has convenient methods and design. To create
 one you can use either `Interface::builder()` or `InterfaceBuilder::new()`.
 
 We'll make some-what realistic example, and it will have:
@@ -60,7 +60,7 @@ We'll make some-what realistic example, and it will have:
 - **Address**
 
   We have multiple choices to do it: `.address()`, `.add_network()` or `.add_address()`. Usually,
-  you will use either `.address()` or `.add_network()`. 
+  you will use either `.address()` or `.add_network()`.
 
   > `.add_address(value)` will add /32 *(or /128)* network (because it contains **only 1 address**).
   >
@@ -77,8 +77,7 @@ We'll make some-what realistic example, and it will have:
   ```
 
 - **ListenPort**, **PrivateKey**, **DNS** and **Endoint**
- 
-  
+
   I'm showing them together, because they don't have some super special differences.
 
   They set value for corresponding property.
@@ -195,7 +194,7 @@ The last thing to do: add peer to interface.
 ```rust
 server_interface.peers.push(client_peer.clone());
 ```
-    
+
 ## `Peer::to_interface()`
 
 This method is a great helper function, that constructs Client's `Interface` from Client's `Peer`
@@ -207,6 +206,10 @@ With `ToInterfaceOptions` you can:
 
 - Make server a default gateway (`.default_gateway(true)`)
 - Set PersistentKeepalive to Server's `Peer` (`.persistent_keepalive(value)`)
+
+With `keepalive-range` feature (implies `amneziawg`) `PersistentKeepalive` also accepts
+a range (`.persistent_keepalive("20-30".parse::<UintRange>()?)`), that requires
+AmneziaWG 3.1.
 
 ```rust
 let client_interface = client_peer

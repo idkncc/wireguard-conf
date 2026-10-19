@@ -49,9 +49,15 @@ println!("{}", peer.to_interface(&interface, ToInterfaceOptions::new()).unwrap()
 
 - `amneziawg`: adds support for generating and manually building amnezia settings via
   [`AmneziaWG`](https://docs.rs/wireguard-conf/latest/wireguard-conf/enum.AmneziaWG.html) enum.
+  AmneziaWG **1.0**, **2.0** and **3.1** are supported (`AmneziaWG::random_v1`,
+  `AmneziaWG::random_v2`, `AmneziaWG::random_v3`).
 
   > **AmneziaWG** is a fork of wireguard, that less recognizable by DPI systems by
   > randomizing packet headers with packet sizes.
+
+- `keepalive-range`: lets `Peer`'s and `ToInterfaceOptions`' `persistent_keepalive`
+  accept a range (`20-30`) instead of a single number, that requires AmneziaWG 3.1.
+  Implies `amneziawg`.
 
 - `serde`: adds implementions of `serde::Serialize` and `serde::Deserialize` for all structs.
 

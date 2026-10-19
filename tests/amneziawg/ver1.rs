@@ -20,7 +20,7 @@ fn validate_jc() {
 
     assert_eq!(
         settings.validate(),
-        Err(WireguardError::InvalidAmneziaSetting("Jc".to_string()))
+        Err(WireguardError::InvalidAmneziaSetting("Jc"))
     );
 }
 
@@ -38,7 +38,7 @@ fn validate_jmin() {
 
     assert_eq!(
         settings.validate(),
-        Err(WireguardError::InvalidAmneziaSetting("Jmin".to_string()))
+        Err(WireguardError::InvalidAmneziaSetting("Jmin"))
     );
 }
 
@@ -55,7 +55,7 @@ fn validate_jmax() {
 
     assert_eq!(
         settings.validate(),
-        Err(WireguardError::InvalidAmneziaSetting("Jmax".to_string()))
+        Err(WireguardError::InvalidAmneziaSetting("Jmax"))
     );
 }
 
@@ -71,7 +71,7 @@ fn validate_s1() {
     }
     assert_eq!(
         settings.validate(),
-        Err(WireguardError::InvalidAmneziaSetting("S1".to_string()))
+        Err(WireguardError::InvalidAmneziaSetting("S1"))
     );
 
     // s1 + 56 != s2
@@ -85,7 +85,7 @@ fn validate_s1() {
     }
     assert_eq!(
         settings.validate(),
-        Err(WireguardError::InvalidAmneziaSetting("S1".to_string()))
+        Err(WireguardError::InvalidAmneziaSetting("S1"))
     );
 }
 
@@ -101,7 +101,7 @@ fn validate_s2() {
     }
     assert_eq!(
         settings.validate(),
-        Err(WireguardError::InvalidAmneziaSetting("S2".to_string()))
+        Err(WireguardError::InvalidAmneziaSetting("S2"))
     );
 }
 
@@ -121,8 +121,6 @@ fn validate_h1_h2_h3_h4() {
 
     assert_eq!(
         settings.validate(),
-        Err(WireguardError::InvalidAmneziaSetting(
-            "H1/H2/H3/H4".to_string()
-        ))
+        Err(WireguardError::InvalidAmneziaSetting("H1/H2/H3/H4"))
     );
 }
